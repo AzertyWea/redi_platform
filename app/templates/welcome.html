@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REDI — Real-time Employability & Digital Intelligence</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="REDI">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
@@ -35,6 +39,8 @@ a{text-decoration:none;color:inherit}
 .btn-hero-primary:hover{background:#FFD9D9;transform:translateY(-2px)}
 .btn-hero-outline{border:1.5px solid rgba(255,255,255,0.6);color:#fff;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;transition:all .2s}
 .btn-hero-outline:hover{border-color:#fff;background:rgba(255,255,255,0.1)}
+.btn-download{background:#FFD9D9;color:#7B0D1E;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;transition:all .2s}
+.btn-download:hover{background:#fff;transform:translateY(-2px)}
 .hero-dots{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:2;display:flex;gap:8px}
 .hero-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4);cursor:pointer;transition:all .2s}
 .hero-dot.active{background:#fff;width:22px;border-radius:4px}
@@ -127,8 +133,10 @@ a{text-decoration:none;color:inherit}
     <h1>From classroom to career: <span>track employability</span> in real time</h1>
     <p>REDI measures academic performance, internships, certifications, and skills into one Employability Readiness Index helping students, teachers, and employers make data-driven decisions.</p>
     <div class="hero-buttons">
-      <a href="#" onclick="openLogin();return false;" class="btn-hero-primary"><i class="fas fa-arrow-right-to-bracket"></i> Log in to REDI</a>
-      <a href="#features" class="btn-hero-outline">Explore platform</a>
+      <a href="#" onclick="openLogin();return false;" class="btn-hero-primary"><i class="fas fa-arrow-right-to-bracket"></i> Get started</a>
+      <a href="#" onclick="installApp();return false;" class="btn-download" id="install-btn" style="display:none"><i class="fas fa-download"></i> Download app</a>
+      <a href="#" onclick="showInstallHelp();return false;" class="btn-hero-outline" id="help-btn"><i class="fas fa-mobile-screen"></i> Install on your device</a>
+      <a href="#features" class="btn-hero-outline" style="border-color:rgba(255,255,255,0.3)">Explore <i class="fas fa-arrow-right"></i></a>
     </div>
   </div>
   <div class="hero-dots" id="hero-dots">
@@ -245,6 +253,43 @@ a{text-decoration:none;color:inherit}
   <p>REDI was designed to close the gap between academic achievement and real-world employability giving institutions, students, and employers a shared, trusted source of truth for talent development and recruitment.</p>
 </div>
 
+<div id="install-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,10,10,0.55);z-index:200;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:400px;padding:36px 32px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+    <button onclick="closeInstallHelp()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:#A88;cursor:pointer"><i class="fas fa-times"></i></button>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1.5rem;color:#7B0D1E"><i class="fas fa-download"></i> Install REDI</div>
+      <p style="font-size:13px;color:#A88;margin-top:4px">Add REDI to your home screen for quick access</p>
+    </div>
+    <div id="install-instructions">
+      <div class="install-option" data-platform="android" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="fab fa-android"></i> Android</div>
+        <ol style="font-size:13px;color:#5C4A4A;line-height:1.8;padding-left:20px">
+          <li>Open Chrome</li>
+          <li>Tap the menu <i class="fas fa-ellipsis-vertical"></i> (three dots)</li>
+          <li>Tap <strong>Add to Home screen</strong></li>
+          <li>Tap <strong>Add</strong></li>
+        </ol>
+      </div>
+      <div class="install-option" data-platform="ios" style="margin-bottom:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="fab fa-apple"></i> iPhone / iPad</div>
+        <ol style="font-size:13px;color:#5C4A4A;line-height:1.8;padding-left:20px">
+          <li>Open Safari</li>
+          <li>Tap the Share button <i class="fas fa-square-arrow-up"></i></li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+          <li>Tap <strong>Add</strong></li>
+        </ol>
+      </div>
+      <div class="install-option" data-platform="desktop">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="fas fa-desktop"></i> Computer (Chrome / Edge)</div>
+        <ol style="font-size:13px;color:#5C4A4A;line-height:1.8;padding-left:20px">
+          <li>Click the install icon <i class="fas fa-download"></i> in the address bar</li>
+          <li>Click <strong>Install</strong></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="footer">
   <div class="logo"><i class="fas fa-graduation-cap"></i> REDI</div>
   <p>Real-time Employability and Digital Intelligence Platform &mdash; Institut Universitaire du Camerain</p>
@@ -285,12 +330,41 @@ a{text-decoration:none;color:inherit}
     </p>
   </div>
 </div>
+<script src="/static/js/sw-register.js"></script>
 <script>
 function openLogin(){document.getElementById('login-overlay').style.display='flex'}
 function closeLogin(){document.getElementById('login-overlay').style.display='none'}
 document.getElementById('login-overlay').addEventListener('click', function(e){
   if(e.target === this) closeLogin();
 });
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'inline-block';
+  document.getElementById('help-btn').style.display = 'none';
+});
+
+function installApp(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(result){
+    deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  });
+}
+
+function showInstallHelp(){
+  document.getElementById('install-overlay').style.display = 'flex';
+}
+function closeInstallHelp(){
+  document.getElementById('install-overlay').style.display = 'none';
+}
+document.getElementById('install-overlay').addEventListener('click', function(e){
+  if(e.target === this) closeInstallHelp();
+});
+
 let currentSlide = 0;
 const slides = document.querySelectorAll('.hero-slide');
 const dots = document.querySelectorAll('.hero-dot');
