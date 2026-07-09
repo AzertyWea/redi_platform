@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.env
+*.db
+.pytest_cache
+.git
+lint-report
+sample_timetable.pdf
+fullaudit.py
+fullcheck.py
+navcheck.py
+project_audit.txt
+teacher_attendance_route.txt
