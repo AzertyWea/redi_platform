@@ -1,15 +1,8 @@
 ﻿import re
 import os
 import difflib
-import pdfplumber
-import pytesseract
 from PIL import Image
 from app.models import Course, SchoolClass
-
-# --- Windows Tesseract path (hardcoded to avoid PATH issues) ---
-_TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-if os.path.exists(_TESSERACT_PATH):
-    pytesseract.pytesseract.tesseract_cmd = _TESSERACT_PATH
 
 DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -47,6 +40,7 @@ def _extract_table_rows(pdf):
 
 def _ocr_extract_text(images):
     """Attempt 2: OCR fallback for scanned PDFs or photographed/image timetables."""
+    import pytesseract
     full_text = ""
     for img in images:
         full_text += pytesseract.image_to_string(img) + "\n"
@@ -91,6 +85,7 @@ def extract_timetable_from_pdf(file_storage):
       2. If that finds nothing (scanned PDF, or the file is a plain image) -> fall back to OCR.
     Returns a dict: { title_text, class_guess, academic_year_guess, rows: [...], used_ocr: bool, errors: [...] }
     """
+    import pdfplumber
     result = {"title_text": "", "class_guess": None, "academic_year_guess": "",
               "rows": [], "used_ocr": False, "errors": []}
 
