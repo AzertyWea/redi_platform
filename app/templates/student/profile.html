@@ -1,0 +1,124 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> Results</a>
+<a href="/student/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/student/coach"><i class="fas fa-robot"></i> AI Coach</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> Career Data</a>
+<a href="/student/profile" class="active"><i class="fas fa-user-edit"></i> My Profile</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-user-edit"></i> My Profile</h1>
+  <p>Complete your profile to be visible to employers</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}" data-autohide>{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<div class="two-col">
+  <div class="card" style="text-align:center;padding:32px 20px">
+    {% if p and p.photo_filename %}
+      <img src="/static/uploads/profiles/{{ p.photo_filename }}"
+           style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #7B0D1E;margin-bottom:16px">
+    {% else %}
+      <div style="width:110px;height:110px;border-radius:50%;background:#7B0D1E;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#fff;margin:0 auto 16px">
+        {{ current_user.name[0] }}
+      </div>
+    {% endif %}
+    <div style="font-weight:700;font-size:1.1rem;color:#7B0D1E">{{ current_user.name }}</div>
+    <div style="color:#A52535;font-size:0.85rem;margin:4px 0">{{ current_user.matricule }}</div>
+    <div style="color:#8C6E6E;font-size:0.8rem">{{ p.filiere or 'Program not set' }}</div>
+    <div style="color:#8C6E6E;font-size:0.8rem">{{ current_user.department or 'School not set' }}</div>
+
+    <div style="margin:16px 0;padding:12px;background:#F8F5F5;border-radius:8px">
+      <div style="font-size:0.75rem;color:#8C6E6E">ERI Score</div>
+      <div style="font-size:2rem;font-weight:700;color:#7B0D1E">{{ p.eri_score if p else 0 }}%</div>
+    </div>
+
+    {% if p and p.linkedin_url %}
+    <a href="{{ p.linkedin_url }}" target="_blank" class="btn btn-primary btn-sm" style="width:100%">
+      <i class="fab fa-linkedin"></i> View LinkedIn
+    </a>
+    {% endif %}
+
+    {% if p and p.skills %}
+    <div style="margin-top:16px;text-align:left">
+      <div style="font-size:0.75rem;color:#8C6E6E;margin-bottom:8px;font-weight:600">Skills</div>
+      {% for skill in p.skills.split(',') %}
+        <span class="badge badge-primary" style="margin:3px">{{ skill.strip() }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-edit"></i> Edit my profile</h3>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label class="form-label">Profile photo</label>
+        <input type="file" name="photo" id="photo" accept="image/*" class="form-control">
+        <span class="form-hint">JPG, PNG — max 2MB</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">School / Department</label>
+        <select name="department" id="dept-select" class="form-control" onchange="loadPrograms(this.value)">
+          <option value="">-- Select school --</option>
+          {% for d in departments %}
+          <option value="{{ d.name }}" {% if current_user.department == d.name %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Program / Field of study</label>
+        <select name="filiere" id="filiere-select" class="form-control">
+          {% if p and p.filiere %}
+            <option value="{{ p.filiere }}" selected>{{ p.filiere }}</option>
+          {% else %}
+            <option value="">-- Select school above first --</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bio / Description</label>
+        <textarea name="bio" class="form-control" rows="4"
+          placeholder="Tell us about yourself and your career goals...">{{ p.bio or '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Skills <span style="color:#8C6E6E;font-weight:400">(comma separated)</span></label>
+        <input name="skills" class="form-control"
+          placeholder="ex: Python, Excel, Communication, Java"
+          value="{{ p.skills or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fab fa-linkedin" style="color:#0077B5"></i> LinkedIn link</label>
+        <input name="linkedin_url" class="form-control"
+          placeholder="https://linkedin.com/in/your-profile"
+          value="{{ p.linkedin_url or '' }}">
+      </div>
+
+      <button type="submit" class="btn btn-accent w-full btn-loading">
+        <i class="fas fa-save"></i> Save profile
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('dept-select').addEventListener('change', function() {
+  loadPrograms(this.value, 'filiere-select');
+});
+</script>
+{% endblock %}

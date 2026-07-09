@@ -1,0 +1,95 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/employer/search" class="active"><i class="fas fa-search"></i> Rechercher</a>
+{% endblock %}
+{% block page_title %}Search talent{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-search"></i> Search talent</h1>
+  <p>Find the best students based on their profile and ERI score</p>
+</div>
+
+<div class="card mb-16">
+  <form method="GET">
+    <div class="two-col" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Nom</label>
+        <input name="q" class="form-control" placeholder="Rechercher par nom..." value="{{ q }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Filiere</label>
+        <select name="filiere" class="form-control">
+          <option value="">All</option>
+          {% for f in ["Informatique","Genie Civil","Electrotechnique","Telecoms","Finance","Marketing","Gestion","Droit","Medecine","Agronomie"] %}
+          <option value="{{ f }}" {% if filiere == f %}selected{% endif %}>{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Departement</label>
+        <select name="dept" class="form-control">
+          <option value="">All</option>
+          {% for d in ["Informatique","Sciences","Lettres","Economie","Medecine","Droit","BTP","Industrie"] %}
+          <option value="{{ d }}" {% if dept == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Minimum ERI: <strong id="eri-val">{{ eri_min }}%</strong></label>
+        <input type="range" name="eri_min" min="0" max="100" value="{{ eri_min }}"
+               class="form-control" style="padding:4px"
+               oninput="document.getElementById('eri-val').textContent=this.value+'%'">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-accent btn-loading"><i class="fas fa-search"></i> Rechercher</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">{{ students|length }} talent(s) found</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Etudiant</th><th>Filiere</th><th>Departement</th><th>ERI</th><th>LinkedIn</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for p in students %}
+      <tr>
+        <td style="display:flex;align-items:center;gap:10px">
+          {% if p.photo_filename %}
+            <img src="/static/uploads/profiles/{{ p.photo_filename }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+          {% else %}
+            <div style="width:36px;height:36px;border-radius:50%;background:#1B4F72;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">{{ p.user.name[0] }}</div>
+          {% endif %}
+          <div>
+            <div style="font-weight:600">{{ p.user.name }}</div>
+            <div style="font-size:11px;color:#7F8C8D">{{ p.user.matricule }}</div>
+          </div>
+        </td>
+        <td>{{ p.filiere or '-' }}</td>
+        <td>{{ p.user.department or '-' }}</td>
+        <td>
+          <span class="badge {% if p.eri_score >= 80 %}badge-success{% elif p.eri_score >= 60 %}badge-warning{% else %}badge-danger{% endif %}">
+            {{ p.eri_score }}%
+          </span>
+        </td>
+        <td>
+          {% if p.linkedin_url %}
+            <a href="{{ p.linkedin_url }}" target="_blank" style="color:#0077B5"><i class="fab fa-linkedin fa-lg"></i></a>
+          {% else %}<span style="color:#ccc">-</span>{% endif %}
+        </td>
+        <td>
+          <a href="/employer/student/{{ p.id }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-eye"></i> View
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:#7F8C8D">No students found</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure" class="active"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Academic structure{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Academic structure</h1><p>Manage departments, programs, courses, classes, and teacher assignments</p></div>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert alert-{{cat}}" data-autohide>{{msg}}</div>{% endfor %}{% endwith %}
+
+<div class="grid-3">
+  <div class="card">
+    <h3>Departments</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_department">
+      <div class="form-group"><input name="dept_name" class="form-control" placeholder="e.g. Computer Science" required></div>
+      <button class="btn btn-accent btn-sm w-full">Add</button>
+    </form>
+    <div style="margin-top:14px">
+      {% for d in departments %}<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">{{ d.name }}</div>{% else %}<p class="text-muted text-sm">None yet</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h3>Programs</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_program">
+      <div class="form-group"><input name="prog_name" class="form-control" placeholder="e.g. HND Software Eng." required></div>
+      <div class="form-group">
+        <select name="department_id" class="form-control" required>
+          <option value="">-- Department --</option>
+          {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-accent btn-sm w-full">Add</button>
+    </form>
+    <div style="margin-top:14px">
+      {% for p in programs %}<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">{{ p.name }} <span class="text-muted">({{ p.department.name if p.department else '-' }})</span></div>{% else %}<p class="text-muted text-sm">None yet</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h3>Courses</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_course">
+      <div class="form-group"><input name="course_name" class="form-control" placeholder="e.g. Database Systems" required></div>
+      <div class="form-group"><input name="course_code" class="form-control" placeholder="e.g. CS301"></div>
+      <div class="form-group">
+        <select name="program_id" class="form-control" required>
+          <option value="">-- Program --</option>
+          {% for p in programs %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group"><input type="number" name="semester_number" class="form-control" placeholder="Semester number"></div>
+      <button class="btn btn-accent btn-sm w-full">Add</button>
+    </form>
+    <div style="margin-top:14px">
+      {% for c in courses %}<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">{{ c.name }} <span class="text-muted">({{ c.code }})</span></div>{% else %}<p class="text-muted text-sm">None yet</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid-3" style="margin-top:20px">
+  <div class="card">
+    <h3>Classes</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_class">
+      <div class="form-group"><input name="class_name" class="form-control" placeholder="e.g. L2 Software Eng - Group A" required></div>
+      <div class="form-group">
+        <select name="class_department_id" class="form-control" required>
+          <option value="">-- Department --</option>
+          {% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <select name="class_program_id" class="form-control" required>
+          <option value="">-- Program --</option>
+          {% for p in programs %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group"><input type="number" name="class_level" class="form-control" placeholder="Level (e.g. 1, 2, 3)" required></div>
+      <div class="form-group"><input name="class_section" class="form-control" placeholder="Section (e.g. A) - optional"></div>
+      <div class="form-group"><input name="class_academic_year" class="form-control" placeholder="e.g. 2026-2027" value="2026-2027"></div>
+      <button class="btn btn-accent btn-sm w-full">Add class</button>
+    </form>
+    <div style="margin-top:14px;max-height:220px;overflow-y:auto">
+      {% for cls in classes %}<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">{{ cls.display_name }} <span class="text-muted">({{ cls.students|length }} students)</span></div>{% else %}<p class="text-muted text-sm">None yet</p>{% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Assign Teacher to Course</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="assign_teacher">
+      <div class="form-group">
+        <select name="assign_course_id" class="form-control" required>
+          <option value="">-- Course --</option>
+          {% for c in courses %}<option value="{{ c.id }}">{{ c.code }} - {{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <select name="assign_teacher_id" class="form-control" required>
+          <option value="">-- Teacher --</option>
+          {% for t in teachers %}<option value="{{ t.id }}">{{ t.name }} ({{ t.matricule }})</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-accent btn-sm w-full">Assign</button>
+    </form>
+    <div style="margin-top:14px;max-height:220px;overflow-y:auto">
+      {% for c in courses %}
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        {{ c.code }} - {{ c.name }}
+        <span class="text-muted">&rarr; {{ c.teacher.name if c.teacher else 'unassigned' }}</span>
+      </div>
+      {% else %}<p class="text-muted text-sm">No courses yet</p>{% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Link Course to Class</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="link_course_class">
+      <div class="form-group">
+        <select name="link_course_id" class="form-control" required>
+          <option value="">-- Course --</option>
+          {% for c in courses %}<option value="{{ c.id }}">{{ c.code }} - {{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <select name="link_class_id" class="form-control" required>
+          <option value="">-- Class --</option>
+          {% for cls in classes %}<option value="{{ cls.id }}">{{ cls.display_name }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-accent btn-sm w-full">Link</button>
+    </form>
+    <div style="margin-top:14px;max-height:180px;overflow-y:auto">
+      {% for c in courses %}
+        {% for cls in c.classes %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+          <span>{{ c.code }} &harr; {{ cls.display_name }}</span>
+          <form method="POST" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="unlink_course_class">
+            <input type="hidden" name="unlink_course_id" value="{{ c.id }}">
+            <input type="hidden" name="unlink_class_id" value="{{ cls.id }}">
+            <button class="btn btn-danger btn-sm" data-confirm="Unlink this course from this class?"><i class="fas fa-times"></i></button>
+          </form>
+        </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

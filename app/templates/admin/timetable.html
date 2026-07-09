@@ -1,0 +1,163 @@
+﻿{% extends "base.html" %}
+{% block title %}Timetable Management{% endblock %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable" class="active"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-calendar-alt"></i> Timetable Management</h1>
+  <p>Build and manage the weekly class schedule</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}" data-autohide><i class="fas fa-info-circle"></i> {{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-header"><span class="card-title"><i class="fas fa-plus"></i> Add Schedule Entry</span><a href="{{ url_for('admin.timetable_upload') }}" class="btn btn-sm btn-outline"><i class="fas fa-file-pdf"></i> Upload PDF Instead</a></div>
+
+    <form method="POST" id="timetableForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">Title (optional)</label>
+        <input type="text" name="title" class="form-control" placeholder="ex: Semester 1 - Software Engineering L2">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select name="course_id" id="courseSelect" class="form-control" required onchange="updateClassOptions()">
+          <option value="">-- Select course --</option>
+          {% for c in courses %}
+          <option value="{{ c.id }}">{{ c.code }} - {{ c.name }}
+            {% if c.teacher %} ({{ c.teacher.name }}){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Class *</label>
+        <select name="class_id" id="classSelect" class="form-control" required>
+          <option value="">-- Select course first --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Day *</label>
+        <select name="day_of_week" class="form-control" required>
+          <option value="">-- Select day --</option>
+          {% for d in days %}
+          <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Start Time *</label>
+        <input type="time" name="start_time" class="form-control" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">End Time *</label>
+        <input type="time" name="end_time" class="form-control" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Room</label>
+        <input type="text" name="room" class="form-control" placeholder="ex: Room A101">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Academic Year</label>
+        <input type="text" name="academic_year" class="form-control" placeholder="ex: 2026-2027" value="2026-2027">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Semester</label>
+        <select name="semester_number" class="form-control">
+          <option value="">-- Select --</option>
+          {% for i in range(1,7) %}
+          <option value="{{ i }}">Semester {{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-accent btn-loading w-full">
+        <i class="fas fa-plus"></i> Add Entry
+      </button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><i class="fas fa-table"></i> Weekly Schedule</span></div>
+    {% for day in days %}
+      {% if entries_by_day[day] %}
+      <div style="margin-bottom:20px">
+        <div style="font-weight:700;color:#7B0D1E;font-size:0.95rem;border-bottom:2px solid #7B0D1E;padding-bottom:4px;margin-bottom:10px">
+          {{ day }}
+        </div>
+        {% for e in entries_by_day[day] %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#F8F5F5;border-radius:8px;margin-bottom:8px;border-left:3px solid #7B0D1E">
+          <div>
+            <div style="font-weight:600;color:#1a1a1a;font-size:0.9rem">
+              {{ e.course.code }} — {{ e.course.name }}
+            </div>
+            <div style="font-size:0.78rem;color:#8C6E6E;margin-top:2px">
+              {% if e.school_class %}<i class="fas fa-users"></i> {{ e.school_class.display_name }} &nbsp;|&nbsp;{% endif %}
+              <i class="fas fa-clock"></i>
+              {{ e.start_time.strftime('%H:%M') }} – {{ e.end_time.strftime('%H:%M') }}
+              {% if e.room %} &nbsp;|&nbsp; <i class="fas fa-door-open"></i> {{ e.room }}{% endif %}
+              {% if e.course.teacher %} &nbsp;|&nbsp; <i class="fas fa-chalkboard-teacher"></i> {{ e.course.teacher.name }}{% endif %}
+            </div>
+          </div>
+          <form method="POST" action="{{ url_for('admin.delete_schedule_entry', entry_id=e.id) }}" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger btn-sm" data-confirm="Delete this entry?">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+    {% if entries|length == 0 %}
+      <p style="color:var(--muted);text-align:center;padding:32px 0">No schedule entries yet. Add one using the form.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const courseClassMap = {
+  {% for c in courses %}
+  "{{ c.id }}": [{% for cls in c.classes %}{id: {{ cls.id }}, name: {{ cls.display_name|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}
+  {% endfor %}
+};
+
+function updateClassOptions() {
+  const courseId = document.getElementById('courseSelect').value;
+  const classSelect = document.getElementById('classSelect');
+  classSelect.innerHTML = '';
+  const classes = courseClassMap[courseId] || [];
+  if (classes.length === 0) {
+    classSelect.innerHTML = '<option value="">-- No classes linked to this course --</option>';
+    return;
+  }
+  classSelect.innerHTML = '<option value="">-- Select class --</option>';
+  classes.forEach(cls => {
+    const opt = document.createElement('option');
+    opt.value = cls.id;
+    opt.textContent = cls.name;
+    classSelect.appendChild(opt);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/teacher/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/teacher/attendance"><i class="fas fa-clipboard-check"></i> Attendance</a>
+<a href="/teacher/assignments"><i class="fas fa-file-pen"></i> Assignments</a>
+<a href="/teacher/quizzes"><i class="fas fa-circle-question"></i> Quizzes</a>
+<a href="/teacher/observations" class="active"><i class="fas fa-comment-dots"></i> Observations</a>
+{% endblock %}
+{% block page_title %}Student observations{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Student observations</h1><p>Record participation and behavioral notes</p></div>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert alert-{{cat}}" data-autohide>{{msg}}</div>{% endfor %}{% endwith %}
+
+<div class="card">
+  <h3>Select course &amp; class</h3>
+  <form method="GET" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+    <div>
+      <label class="form-label">Course</label>
+      <select name="course_id" onchange="this.form.submit()" class="form-control" style="min-width:280px">
+        <option value="">-- Select a course you teach --</option>
+        {% for c in my_courses %}
+        <option value="{{ c.id }}" {% if selected_course and selected_course.id == c.id %}selected{% endif %}>{{ c.code }} - {{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if selected_course %}
+    <div>
+      <label class="form-label">Class</label>
+      <select name="class_id" onchange="this.form.submit()" class="form-control" style="min-width:280px">
+        <option value="">-- All students (no class filter) --</option>
+        {% for cls in available_classes %}
+        <option value="{{ cls.id }}" {% if selected_class and selected_class.id == cls.id %}selected{% endif %}>{{ cls.display_name }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="course_id" value="{{ selected_course.id }}">
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h3>New observation</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="course_id" value="{{ selected_course.id if selected_course else '' }}">
+      <input type="hidden" name="class_id" value="{{ selected_class.id if selected_class else '' }}">
+      <div class="form-group"><label class="form-label">Student</label>
+        <select name="student_id" class="form-control" required>
+          {% for s in students %}<option value="{{ s.id }}">{{ s.user.name }} ({{ s.user.matricule }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Course</label>
+        <input name="course" class="form-control" value="{{ selected_course.name if selected_course else '' }}" {% if selected_course %}readonly{% endif %} required>
+      </div>
+      <div class="form-group"><label class="form-label">Participation score (0-20)</label><input type="number" name="participation_score" min="0" max="20" class="form-control" value="15"></div>
+      <div class="form-group"><label class="form-label">Note</label><textarea name="note" class="form-control" rows="3"></textarea></div>
+      <button class="btn btn-accent w-full btn-loading"><i class="fas fa-plus"></i> Record observation</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Recent observations</h3>
+    {% for o in observations %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <strong>{{ o.student.user.name }}</strong> — {{ o.course }}
+      <div class="text-sm text-muted">{{ o.note }} | Score: {{ o.participation_score }}/20</div>
+    </div>
+    {% else %}<p class="text-muted text-sm">No observations yet</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

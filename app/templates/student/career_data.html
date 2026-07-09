@@ -1,0 +1,108 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> Results</a>
+<a href="/student/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/student/coach"><i class="fas fa-robot"></i> AI Coach</a>
+<a href="/student/profile"><i class="fas fa-user-edit"></i> My Profile</a>
+<a href="/student/career-data" class="active"><i class="fas fa-briefcase"></i> Career Data</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+{% endblock %}
+{% block page_title %}Career Data{% endblock %}
+{% block content %}
+<div class="page-header"><h1><i class="fas fa-briefcase"></i> Career Data</h1><p>Add internships, certifications, and projects to strengthen your ERI score</p></div>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert alert-{{cat}}" data-autohide>{{msg}}</div>{% endfor %}{% endwith %}
+
+<div class="two-col">
+<div>
+  <div class="card">
+    <h3><i class="fas fa-building"></i> Add internship</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_internship">
+      <div class="form-group"><label class="form-label">Company</label><input name="company_name" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Role</label><input name="role_title" class="form-control" required></div>
+      <div class="grid-2" style="gap:10px">
+        <div class="form-group"><label class="form-label">Start date</label><input type="date" name="start_date" class="form-control"></div>
+        <div class="form-group"><label class="form-label">End date</label><input type="date" name="end_date" class="form-control"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+      <button class="btn btn-accent w-full btn-loading"><i class="fas fa-plus"></i> Add internship</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-certificate"></i> Add certification</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_certification">
+      <div class="form-group"><label class="form-label">Title</label><input name="cert_title" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Issuer</label><input name="issuer" class="form-control" placeholder="e.g. Google, Coursera"></div>
+      <div class="form-group"><label class="form-label">Date obtained</label><input type="date" name="date_obtained" class="form-control"></div>
+      <button class="btn btn-accent w-full btn-loading"><i class="fas fa-plus"></i> Add certification</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-diagram-project"></i> Add project</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_project">
+      <div class="form-group"><label class="form-label">Title</label><input name="proj_title" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="proj_description" class="form-control" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">Technologies</label><input name="technologies" class="form-control" placeholder="Python, Flask, SQL"></div>
+      <div class="form-group"><label class="form-label">Project URL (optional)</label><input name="project_url" class="form-control" placeholder="https://github.com/..."></div>
+      <div class="form-group"><label class="form-label">Related course</label><input name="course_related" class="form-control"></div>
+      <button class="btn btn-accent w-full btn-loading"><i class="fas fa-plus"></i> Add project</button>
+    </form>
+  </div>
+</div>
+
+<div>
+  <div class="card">
+    <h3><i class="fas fa-building"></i> My internships ({{ internships|length }})</h3>
+    {% for i in internships %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div class="flex-between"><strong>{{ i.role_title }}</strong>
+        <form method="POST" action="/student/career-data/delete/internship/{{ i.id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger btn-sm btn-loading" data-confirm="Delete?"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+      <div class="text-sm text-muted">{{ i.company_name }} | {{ i.start_date }} - {{ i.end_date or 'Present' }}</div>
+    </div>
+    {% else %}<p class="text-muted text-sm">No internships added yet</p>{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-certificate"></i> My certifications ({{ certifications|length }})</h3>
+    {% for c in certifications %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div class="flex-between"><strong>{{ c.title }}</strong>
+        <form method="POST" action="/student/career-data/delete/certification/{{ c.id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger btn-sm btn-loading" data-confirm="Delete?"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+      <div class="text-sm text-muted">{{ c.issuer }} | {{ c.date_obtained }}</div>
+    </div>
+    {% else %}<p class="text-muted text-sm">No certifications added yet</p>{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-diagram-project"></i> My projects ({{ projects|length }})</h3>
+    {% for p in projects %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div class="flex-between"><strong>{{ p.title }}</strong>
+        <form method="POST" action="/student/career-data/delete/project/{{ p.id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger btn-sm btn-loading" data-confirm="Delete?"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+      <div class="text-sm text-muted">{{ p.technologies }}</div>
+    </div>
+    {% else %}<p class="text-muted text-sm">No projects added yet</p>{% endfor %}
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/teacher/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/teacher/attendance"><i class="fas fa-clipboard-check"></i> Attendance</a>
+<a href="/teacher/assignments" class="active"><i class="fas fa-file-pen"></i> Assignments</a>
+<a href="/teacher/quizzes"><i class="fas fa-circle-question"></i> Quizzes</a>
+<a href="/teacher/observations"><i class="fas fa-comment-dots"></i> Observations</a>
+{% endblock %}
+{% block page_title %}Assignments{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Assignments</h1><p>Create and manage assignments for your courses</p></div>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="alert alert-{{cat}}" data-autohide>{{msg}}</div>{% endfor %}{% endwith %}
+<div class="two-col">
+  <div class="card">
+    <h3>New assignment</h3>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group"><label class="form-label">Course</label><input name="course" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Title</label><input name="title" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3"></textarea></div>
+      <div class="grid-2" style="gap:10px">
+        <div class="form-group"><label class="form-label">Due date</label><input type="date" name="due_date" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Max score</label><input type="number" name="max_score" value="20" class="form-control"></div>
+      </div>
+      <button class="btn btn-accent w-full btn-loading"><i class="fas fa-plus"></i> Create assignment</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>My assignments ({{ assignments|length }})</h3>
+    {% for a in assignments %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <strong>{{ a.title }}</strong>
+      <div class="text-sm text-muted">{{ a.course }} | Due: {{ a.due_date.strftime('%d/%m/%Y') if a.due_date else 'N/A' }} | Max: {{ a.max_score }}</div>
+    </div>
+    {% else %}<p class="text-muted text-sm">No assignments yet</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

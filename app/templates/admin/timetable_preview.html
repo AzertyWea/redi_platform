@@ -1,0 +1,95 @@
+﻿{% extends "base.html" %}
+{% block title %}Timetable Import Preview{% endblock %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable" class="active"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-magnifying-glass"></i> Review Extracted Timetable</h1>
+  <p>Check each row before confirming — nothing is saved yet. Uncheck any row you don't want to import.</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}" data-autohide><i class="fas fa-info-circle"></i> {{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('admin.timetable_upload_confirm') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="row_count" value="{{ extraction.rows|length }}">
+
+  <div class="card">
+    <h3><i class="fas fa-file-lines"></i> Detected Document Info</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Title line found in PDF: "{{ extraction.title_text }}"</p>
+    <div class="form-group">
+      <label class="form-label">Class this timetable applies to *</label>
+      <select name="shared_class_id" class="form-control" required>
+        <option value="">-- Select class --</option>
+        {% for cls in classes %}
+        <option value="{{ cls.id }}" {% if extraction.class_guess and extraction.class_guess.id == cls.id %}selected{% endif %}>{{ cls.display_name }}</option>
+        {% endfor %}
+      </select>
+      {% if extraction.class_guess %}
+      <div class="form-hint"><i class="fas fa-wand-magic-sparkles"></i> Auto-detected from the title. Change it if this is wrong.</div>
+      {% else %}
+      <div class="form-hint" style="color:#C0392B"><i class="fas fa-triangle-exclamation"></i> Could not auto-detect the class — please select it manually.</div>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Academic Year</label>
+      <input type="text" name="shared_academic_year" class="form-control" value="{{ extraction.academic_year_guess }}" placeholder="e.g. 2026-2027">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title for these entries (optional)</label>
+      <input type="text" name="shared_title" class="form-control" value="{{ extraction.title_text }}">
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-table"></i> Extracted Sessions ({{ extraction.rows|length }} rows found)</h3>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Import?</th><th>Day</th><th>Start</th><th>End</th><th>Course</th><th>Room</th><th>As read from PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in extraction.rows %}
+          <tr style="{% if not row.row_ok %}background:rgba(192,57,43,0.05){% endif %}">
+            <td><input type="checkbox" name="include_{{ loop.index0 }}" {% if row.row_ok %}checked{% endif %}></td>
+            <td><input type="text" name="day_{{ loop.index0 }}" class="form-control" value="{{ row.day }}" style="min-width:100px"></td>
+            <td><input type="time" name="start_time_{{ loop.index0 }}" class="form-control" value="{{ row.start_time }}"></td>
+            <td><input type="time" name="end_time_{{ loop.index0 }}" class="form-control" value="{{ row.end_time }}"></td>
+            <td>
+              <select name="course_id_{{ loop.index0 }}" class="form-control" style="min-width:200px">
+                <option value="">-- Select course --</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}" {% if row.course_match and row.course_match.id == c.id %}selected{% endif %}>{{ c.code }} - {{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="text" name="room_{{ loop.index0 }}" class="form-control" value="{{ row.room }}" style="min-width:100px"></td>
+            <td style="font-size:11px;color:var(--muted)">
+              Code: {{ row.code }}<br>
+              {{ row.course_name }}<br>
+              {{ row.teacher_name }}
+              {% if not row.row_ok %}<br><span style="color:#C0392B">⚠ needs review</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-accent btn-loading btn-lg"><i class="fas fa-check"></i> Confirm &amp; Create Schedule Entries</button>
+  <a href="{{ url_for('admin.timetable_upload') }}" class="btn btn-outline btn-lg"><i class="fas fa-rotate-left"></i> Upload a Different File</a>
+</form>
+{% endblock %}

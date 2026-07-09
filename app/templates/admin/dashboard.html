@@ -1,0 +1,65 @@
+﻿{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+  <a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block content %}
+<form method="POST" action="/admin/recalculate-eri" style="display:inline-block;margin-bottom:16px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-accent btn-sm btn-loading" data-confirm="Recalculate ERI for all students?"><i class="fas fa-sync"></i> Recalculate ERI</button>
+</form>
+<div class="stats-row">
+  <div class="stat-card"><div class="label">Total Students</div><div class="value blue">{{ total_students }}</div></div>
+  <div class="stat-card"><div class="label">Total Teachers</div><div class="value teal">{{ total_teachers }}</div></div>
+  <div class="stat-card"><div class="label">Avg ERI Score</div><div class="value amber">{{ avg_eri }}%</div></div>
+  <div class="stat-card"><div class="label">Documents</div><div class="value blue">{{ total_docs }}</div></div>
+</div>
+<div class="card">
+  <h3><i class="fas fa-users"></i> All Students</h3>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Matricule</th><th>Program</th><th>Semester</th><th>ERI</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td><strong>{{ s.user.name }}</strong></td>
+        <td>{{ s.user.matricule }}</td>
+        <td>{{ s.program }}</td>
+        <td>S{{ s.current_semester }}</td>
+        <td><strong style="color:{{ '#17A589' if s.eri_score >= 75 else '#E67E22' if s.eri_score >= 50 else '#C0392B' }}">{{ s.eri_score }}%</strong></td>
+        <td><span class="badge {{ 'badge-success' if s.eri_score >= 75 else 'badge-warning' if s.eri_score >= 50 else 'badge-danger' }}">{{ 'Strong' if s.eri_score >= 75 else 'Average' if s.eri_score >= 50 else 'At Risk' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="two-col">
+  <div class="card">
+    <h3><i class="fas fa-chart-bar"></i> ERI Distribution</h3>
+    <canvas id="eriChart" height="200"></canvas>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="/admin/bulk-import" class="btn btn-primary"><i class="fas fa-upload"></i> Bulk Import Data</a>
+      <a href="/admin/documents" class="btn btn-secondary"><i class="fas fa-folder"></i> Manage Documents</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+new Chart(document.getElementById('eriChart'),{
+  type:'bar',
+  data:{labels:[{% for s in students %}'{{ s.user.name.split()[0] }}',{% endfor %}],datasets:[{label:'ERI Score',data:[{% for s in students %}{{ s.eri_score }},{% endfor %}],backgroundColor:'#17A589',borderRadius:6}]},
+  options:{responsive:true,scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:false}}}
+});
+</script>
+{% endblock %}
+
+
+
+

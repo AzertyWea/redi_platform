@@ -1,0 +1,51 @@
+﻿{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/student/results" class="active"><i class="fas fa-chart-bar"></i> My Results</a>
+<a href="/student/documents"><i class="fas fa-file-alt"></i> Documents</a>
+{% endblock %}
+{% block page_title %}My Results{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Poppins',sans-serif;font-size:18px;color:#1B4F72">{{ profile.program if profile else 'N/A' }}</div>
+      <div style="color:#7F8C8D;font-size:13px;margin-top:4px">{{ profile.duration_years if profile else 2 }} Years Program &mdash; {{ profile.duration_years * 2 if profile else 4 }} Semesters Total</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;color:#7F8C8D">Overall ERI</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:28px;color:#17A589">{{ profile.eri_score if profile else 0 }}%</div>
+    </div>
+  </div>
+</div>
+{% for r in results %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h3><i class="fas fa-calendar"></i> Semester {{ r.semester_number }}</h3>
+    <span class="badge badge-success">Overall: {{ r.overall_score }}%</span>
+  </div>
+  <table class="table">
+    <thead>
+      <tr><th>Component</th><th>Score</th><th>Weight</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Continuous Assessment (CA)</td><td><strong>{{ r.ca_score }}%</strong></td><td>30%</td><td><span class="badge {{ 'badge-success' if r.ca_score >= 70 else 'badge-warning' }}">{{ 'Good' if r.ca_score >= 70 else 'Needs Work' }}</span></td></tr>
+      <tr><td>Final Semester Exam</td><td><strong>{{ r.exam_score }}%</strong></td><td>50%</td><td><span class="badge {{ 'badge-success' if r.exam_score >= 70 else 'badge-warning' }}">{{ 'Good' if r.exam_score >= 70 else 'Needs Work' }}</span></td></tr>
+      <tr><td>Attendance</td><td><strong>{{ r.attendance }}%</strong></td><td>5%</td><td><span class="badge {{ 'badge-success' if r.attendance >= 80 else 'badge-danger' }}">{{ 'Excellent' if r.attendance >= 80 else 'Low' }}</span></td></tr>
+      <tr><td>Projects &amp; Labs</td><td><strong>{{ r.project_score }}%</strong></td><td>10%</td><td><span class="badge {{ 'badge-success' if r.project_score >= 70 else 'badge-warning' }}">{{ 'Good' if r.project_score >= 70 else 'Improve' }}</span></td></tr>
+      <tr><td>Internship / Field Work</td><td><strong>{{ r.internship_score if r.internship_score > 0 else 'N/A' }}</strong></td><td>5%</td><td><span class="badge {{ 'badge-success' if r.internship_score > 0 else 'badge-warning' }}">{{ 'Done' if r.internship_score > 0 else 'Pending' }}</span></td></tr>
+    </tbody>
+  </table>
+  <div style="background:#E8F8F5;border-radius:8px;padding:12px;margin-top:14px;font-size:13px;border-left:3px solid #17A589">
+    <strong>AI Recommendation:</strong>
+    {% if r.exam_score < 70 %}Focus on final exam preparation — consider study groups and past papers.{% endif %}
+    {% if r.attendance < 80 %} Attendance is below 80% — this negatively impacts your ERI score.{% endif %}
+    {% if r.internship_score == 0 %} Complete an internship to unlock the professional experience component.{% endif %}
+    {% if r.overall_score >= 80 %} Excellent semester! Add your projects to your Digital Career Passport.{% endif %}
+  </div>
+</div>
+{% else %}
+<div class="card"><p style="color:#7F8C8D;text-align:center">No results available yet. Check back after your first semester.</p></div>
+{% endfor %}
+{% endblock %}
+

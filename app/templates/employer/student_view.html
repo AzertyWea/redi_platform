@@ -1,0 +1,76 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/employer/search"><i class="fas fa-search"></i> Rechercher</a>
+{% endblock %}
+{% block page_title %}Profil Etudiant{% endblock %}
+{% block content %}
+<a href="/employer/search" class="btn btn-outline btn-sm mb-16"><i class="fas fa-arrow-left"></i> Back</a>
+
+<div class="two-col">
+  <div class="card" style="text-align:center;padding:32px 20px">
+    {% if p.photo_filename %}
+      <img src="/static/uploads/profiles/{{ p.photo_filename }}"
+           style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #17A589;margin-bottom:16px">
+    {% else %}
+      <div style="width:120px;height:120px;border-radius:50%;background:#1B4F72;display:flex;align-items:center;justify-content:center;font-size:3rem;color:#fff;margin:0 auto 16px">
+        {{ p.user.name[0] }}
+      </div>
+    {% endif %}
+    <div style="font-weight:700;font-size:1.2rem;color:#1B4F72">{{ p.user.name }}</div>
+    <div style="color:#17A589;font-size:0.85rem">{{ p.user.matricule }}</div>
+    <div style="color:#7F8C8D;font-size:0.8rem;margin-top:4px">{{ p.filiere or '-' }} | {{ p.user.department or '-' }}</div>
+
+    <div style="margin:20px 0;padding:16px;background:#F4F6F9;border-radius:10px">
+      <div style="font-size:0.75rem;color:#7F8C8D">Score ERI</div>
+      <div style="font-size:2.5rem;font-weight:700;color:{% if p.eri_score >= 80 %}#17A589{% elif p.eri_score >= 60 %}#E67E22{% else %}#C0392B{% endif %}">
+        {{ p.eri_score }}%
+      </div>
+      <div style="font-size:0.75rem;color:#7F8C8D">
+        {% if p.eri_score >= 80 %}Excellent profile{% elif p.eri_score >= 60 %}Good profile{% else %}Developing profile{% endif %}
+      </div>
+    </div>
+
+    {% if p.linkedin_url %}
+    <a href="{{ p.linkedin_url }}" target="_blank" class="btn btn-primary w-full">
+      <i class="fab fa-linkedin"></i> View LinkedIn
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    {% if p.bio %}
+    <h3>About</h3>
+    <p style="color:#555;font-size:0.9rem;line-height:1.6;margin-bottom:20px">{{ p.bio }}</p>
+    {% endif %}
+
+    {% if p.skills %}
+    <h3>Competences</h3>
+    <div style="margin:12px 0 20px">
+      {% for skill in p.skills.split(',') %}
+        <span class="badge badge-primary" style="margin:4px">{{ skill.strip() }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h3>Academic results</h3>
+    {% if p.results %}
+    <table class="table">
+      <thead><tr><th>Semestre</th><th>Note CA</th><th>Examen</th><th>Score global</th></tr></thead>
+      <tbody>
+      {% for r in p.results %}
+      <tr>
+        <td>S{{ r.semester_number }}</td>
+        <td>{{ r.ca_score }}/20</td>
+        <td>{{ r.exam_score }}/20</td>
+        <td><strong>{{ r.overall_score }}%</strong></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7F8C8D;font-size:0.9rem">No results available</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

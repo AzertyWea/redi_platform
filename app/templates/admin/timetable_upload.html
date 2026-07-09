@@ -1,0 +1,38 @@
+﻿{% extends "base.html" %}
+{% block title %}Upload Timetable PDF{% endblock %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable" class="active"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-file-pdf"></i> Upload Timetable PDF</h1>
+  <p>Upload an existing timetable and the system will extract and pre-fill the schedule for your review</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}" data-autohide><i class="fas fa-info-circle"></i> {{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<div class="card" style="max-width:520px">
+  <h3><i class="fas fa-upload"></i> Select PDF</h3>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label class="form-label">Timetable file (PDF, or a photo/scan as PNG or JPG)</label>
+      <input type="file" name="pdf_file" accept="application/pdf,image/png,image/jpeg" class="form-control" required>
+      <div class="form-hint">For PDFs with a real table, extraction is precise. For scanned PDFs or photos, the system falls back to OCR (text recognition) - less precise, so double-check the preview screen carefully.</div>
+    </div>
+    <button type="submit" class="btn btn-accent btn-loading w-full"><i class="fas fa-magnifying-glass"></i> Extract &amp; Preview</button>
+  </form>
+  <a href="{{ url_for('admin.timetable') }}" class="btn btn-outline w-full" style="margin-top:12px">
+    <i class="fas fa-arrow-left"></i> Back to Manual Timetable Entry
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/teacher/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/teacher/attendance" class="active"><i class="fas fa-clipboard-check"></i> Take Attendance</a>
+{% endblock %}
+{% block page_title %}Take Attendance{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-clipboard-check"></i> Select Course &amp; Class</h3>
+  <form method="GET" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px">
+    <div>
+      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Course</label>
+      <select name="course_id" onchange="this.form.submit()" style="padding:10px 14px;border:1px solid #E5E8EC;border-radius:8px;font-size:14px;min-width:280px">
+        <option value="">-- Select a course you teach --</option>
+        {% for c in my_courses %}
+        <option value="{{ c.id }}" {% if selected_course and selected_course.id == c.id %}selected{% endif %}>{{ c.code }} - {{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if selected_course %}
+    <div>
+      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Class</label>
+      <select name="class_id" onchange="this.form.submit()" style="padding:10px 14px;border:1px solid #E5E8EC;border-radius:8px;font-size:14px;min-width:280px">
+        <option value="">-- Select a class --</option>
+        {% for cls in available_classes %}
+        <option value="{{ cls.id }}" {% if selected_class and selected_class.id == cls.id %}selected{% endif %}>{{ cls.display_name }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="course_id" value="{{ selected_course.id }}">
+    </div>
+    {% endif %}
+  </form>
+
+  {% if selected_course and not available_classes %}
+    <p style="color:var(--muted)">This course isn't linked to any class yet.</p>
+  {% endif %}
+
+  {% if selected_class %}
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="course_id" value="{{ selected_course.id }}">
+    <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+    <p style="margin-bottom:12px;color:var(--muted);font-size:14px">
+      Marking attendance for <strong>{{ selected_class.display_name }}</strong> — {{ selected_course.name }} ({{ students|length }} students)
+    </p>
+    {% if students %}
+    <table class="table">
+      <thead><tr><th>Student</th><th>Matricule</th><th>Mark Attendance</th></tr></thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td><strong>{{ s.user.name }}</strong></td>
+          <td>{{ s.user.matricule }}</td>
+          <td>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="radio" name="status_{{ s.id }}" value="present" checked> <span class="badge badge-success">Present</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="radio" name="status_{{ s.id }}" value="late"> <span class="badge badge-warning">Late</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="radio" name="status_{{ s.id }}" value="absent"> <span class="badge badge-danger">Absent</span>
+              </label>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary btn-loading" style="margin-top:20px"><i class="fas fa-save"></i> Save Attendance</button>
+    {% else %}
+    <p style="color:var(--muted)">No students in this class yet.</p>
+    {% endif %}
+  </form>
+  {% elif not selected_course %}
+  <p style="color:var(--muted)">Choose a course above to begin.</p>
+  {% endif %}
+</div>
+{% endblock %}

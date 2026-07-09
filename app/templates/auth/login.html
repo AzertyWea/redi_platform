@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REDI - Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#1B4F72,#17A589);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+.logo{text-align:center;margin-bottom:28px}
+.logo h2{font-family:'Poppins',sans-serif;color:#1B4F72;font-size:28px}<br>.logo p{color:#7F8C8D;font-size:14px;margin-top:4px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:#1C2833;margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:11px 14px;border:1px solid #E5E8EC;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;transition:.2s;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:#17A589;box-shadow:0 0 0 3px rgba(23,165,137,0.1)}
+.btn{width:100%;padding:13px;background:#17A589;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s;margin-top:8px}
+.btn:hover{background:#148f77}
+.link{text-align:center;margin-top:16px;font-size:13px;color:#7F8C8D}
+.link a{color:#17A589;text-decoration:none;font-weight:500}
+.demo-box{background:#F4F6F9;border-radius:8px;padding:14px;margin-top:20px;font-size:12px;color:#7F8C8D}
+.demo-box strong{color:#1B4F72;display:block;margin-bottom:6px}
+.demo-row{display:flex;justify-content:space-between;padding:3px 0}
+.alert{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#FADBD8;color:#922B21;border:1px solid #F1948A}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h2><i class="fas fa-graduation-cap" style="color:#17A589"></i> REDI</h2>
+    <p>Sign in to your portal</p>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  <form method="POST">
+    <div class="form-group">
+      <label>Matricule / ID</label>
+      <input type="text" name="matricule" placeholder="e.g. S001 or ADMIN01" required>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password" required>
+    </div>
+    <button type="submit" class="btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+  </form>
+  <div class="demo-box">
+    <strong><i class="fas fa-info-circle"></i> Demo Credentials</strong>
+    <div class="demo-row"><span>Student (Amina)</span><span><strong>S001</strong> / demo1234</span></div>
+    <div class="demo-row"><span>Student (Pascal)</span><span><strong>S131</strong> / demo1234</span></div>
+    <div class="demo-row"><span>Teacher</span><span><strong>T001</strong> / demo1234</span></div>
+    <div class="demo-row"><span>Admin</span><span><strong>ADMIN01</strong> / admin1234</span></div>
+    <div class="demo-row"><span>Employer</span><span><strong>E001</strong> / demo1234</span></div>
+  </div>
+</div>
+</body>
+</html>

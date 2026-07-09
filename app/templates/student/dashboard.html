@@ -1,0 +1,236 @@
+﻿{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/student/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> My Results</a>
+<a href="/student/documents"><i class="fas fa-file-alt"></i> Documents</a>
+<a href="/student/coach"><i class="fas fa-robot"></i> AI Coach</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> Career Data</a>
+<a href="/student/profile"><i class="fas fa-user-edit"></i> My Profile</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+{% block content %}
+
+<!-- PROFILE STRIP WITH TRUST SCORE -->
+<div class="corp-profile-strip">
+  <div class="corp-avatar">{{ current_user.name[0] }}</div>
+  <div class="corp-profile-meta">
+    <div class="name">{{ current_user.name }}</div>
+    <div class="sub">{{ profile.program if profile else 'No program set' }} &middot; Semester {{ profile.current_semester if profile else 1 }} &middot; {{ current_user.matricule }}</div>
+  </div>
+  <div class="corp-trust-wrap">
+    <div class="corp-trust-label">
+      <span>Employability Readiness Index</span>
+      <span class="score">{{ profile.eri_score if profile else 0 }}%</span>
+    </div>
+    <div class="corp-trust-track">
+      <div class="corp-trust-fill" style="width:{{ profile.eri_score if profile else 0 }}%"></div>
+    </div>
+    <div class="corp-trust-ticks"><span>0</span><span>50</span><span>75</span><span>100</span></div>
+  </div>
+</div>
+
+<!-- QUICK LINKS -->
+<div class="corp-quicklinks">
+  <a href="/student/results"><i class="fas fa-chart-bar"></i>Results</a>
+  <a href="/student/career-data"><i class="fas fa-briefcase"></i>Career Data</a>
+  <a href="/student/documents"><i class="fas fa-file-alt"></i>Documents</a>
+  <a href="/student/coach"><i class="fas fa-robot"></i>AI Coach</a>
+  <a href="/student/profile"><i class="fas fa-user-edit"></i>Profile</a>
+  <a href="/student/report/pdf"><i class="fas fa-file-pdf"></i>PDF Report</a>
+</div>
+
+<!-- KPI STRIP -->
+<div class="corp-kpi-strip">
+  <div class="corp-kpi-cell">
+    <div class="lbl">Predicted Next Semester</div>
+    <div class="val">{{ predicted_next }}%
+      {% if predicted_next > (profile.eri_score if profile else 0) %}
+        <span class="delta up"><i class="fas fa-arrow-up"></i></span>
+      {% elif predicted_next < (profile.eri_score if profile else 0) %}
+        <span class="delta down"><i class="fas fa-arrow-down"></i></span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="corp-kpi-cell">
+    <div class="lbl">Internships</div>
+    <div class="val">{{ profile.internships|length if profile else 0 }}</div>
+  </div>
+  <div class="corp-kpi-cell">
+    <div class="lbl">Certifications</div>
+    <div class="val">{{ profile.certifications|length if profile else 0 }}</div>
+  </div>
+  <div class="corp-kpi-cell">
+    <div class="lbl">Projects</div>
+    <div class="val">{{ profile.projects|length if profile else 0 }}</div>
+  </div>
+  <div class="corp-kpi-cell">
+    <div class="lbl">Documents on File</div>
+    <div class="val">{{ docs|length }}</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <!-- SEMESTER TREND vs CLASS AVERAGE -->
+  <div class="corp-panel" style="grid-column:1/-1">
+    <div class="corp-panel-head">
+      <h3>ERI Trend — Semester by Semester</h3>
+      <span class="tag">vs. class average</span>
+    </div>
+    <canvas id="trendChart" height="80"></canvas>
+    <div class="corp-legend">
+      <div class="corp-legend-item"><span class="corp-legend-dot" style="background:#7B0D1E"></span>You</div>
+      <div class="corp-legend-item"><span class="corp-legend-dot" style="background:#8C6E6E"></span>Class average</div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="corp-panel">
+    <div class="corp-panel-head"><h3>Readiness Breakdown</h3></div>
+    <canvas id="readinessRadar" height="220"></canvas>
+  </div>
+
+  <div class="corp-panel">
+    <div class="corp-panel-head">
+      <h3>Attendance — Last 30 Records</h3>
+      <span class="tag">{{ attendance_timeline|length }} entries</span>
+    </div>
+    <div class="corp-row-list" style="max-height:280px;overflow-y:auto">
+      {% for a in attendance_timeline %}
+      <div class="corp-row-item">
+        <div>
+          <div class="corp-row-title">{{ a.course }}</div>
+          <div class="corp-row-sub">{{ a.date.strftime('%d %b %Y') }}</div>
+        </div>
+        <span class="corp-pill {{ 'positive' if a.status == 'present' else 'negative' if a.status == 'absent' else 'neutral' }}">{{ a.status|capitalize }}</span>
+      </div>
+      {% else %}
+      <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No attendance records yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- SEMESTER HISTORY TABLE -->
+<div class="corp-panel">
+  <div class="corp-panel-head"><h3>Semester History</h3></div>
+  <table class="corp-table">
+    <thead><tr><th>Semester</th><th class="num">CA</th><th class="num">Exam</th><th class="num">Attendance</th><th class="num">Project</th><th class="num">Overall</th></tr></thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td>S{{ r.semester_number }}</td>
+        <td class="num">{{ r.ca_score }}%</td>
+        <td class="num">{{ r.exam_score }}%</td>
+        <td class="num">{{ r.attendance }}%</td>
+        <td class="num">{{ r.project_score }}%</td>
+        <td class="num" style="font-weight:700">{{ r.overall_score }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--corp-ink-soft)">No results yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- SCHEDULE -->
+<div class="corp-panel">
+  <div class="corp-panel-head"><h3>Weekly Schedule</h3></div>
+  {% if schedule %}
+  <table class="corp-table">
+    <thead><tr><th>Day</th><th>Course</th><th>Time</th><th>Room</th><th>Teacher</th></tr></thead>
+    <tbody>
+    {% for e in schedule %}
+    <tr>
+      <td>{{ e.day_of_week }}</td>
+      <td>{{ e.course.code }} — {{ e.course.name }}</td>
+      <td>{{ e.start_time.strftime("%H:%M") }} – {{ e.end_time.strftime("%H:%M") }}</td>
+      <td>{{ e.room or "-" }}</td>
+      <td>{{ e.course.teacher.name if e.course.teacher else "-" }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--corp-ink-soft);text-align:center;padding:20px 0;font-size:12.5px">No schedule entries yet.</p>
+  {% endif %}
+</div>
+
+<div class="two-col">
+  <div class="corp-panel">
+    <div class="corp-panel-head"><h3>Recent Documents</h3></div>
+    <div class="corp-row-list">
+      {% for doc in docs %}
+      <div class="corp-row-item">
+        <div>
+          <div class="corp-row-title">{{ doc.doc_type }}</div>
+          <div class="corp-row-sub">{{ doc.filename }}</div>
+        </div>
+        <span class="corp-pill {{ 'positive' if doc.is_verified else 'neutral' }}">{{ 'Verified' if doc.is_verified else 'Pending' }}</span>
+      </div>
+      {% else %}
+      <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No documents uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="corp-panel">
+    <div class="corp-panel-head"><h3>Notifications</h3></div>
+    <div class="corp-row-list">
+      {% for n in notifs %}
+      <div class="corp-row-item">
+        <div>
+          <div class="corp-row-title">{{ n.title }}</div>
+          <div class="corp-row-sub">{{ n.message }}</div>
+        </div>
+      </div>
+      {% else %}
+      <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No notifications.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const trendLabels = [{% for t in eri_trend %}'S{{ t.semester }}',{% endfor %}];
+const trendYou = [{% for t in eri_trend %}{{ t.eri }},{% endfor %}];
+const trendClass = [{% for c in class_avg_trend %}{{ c.avg_eri }},{% endfor %}];
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: trendLabels,
+    datasets: [
+      { label: 'You', data: trendYou, borderColor: '#7B0D1E', backgroundColor: 'rgba(123,13,30,0.06)', fill: true, tension: 0.3, pointRadius: 4, borderWidth: 2.5 },
+      { label: 'Class average', data: trendClass, borderColor: '#8C6E6E', borderDash: [4,4], fill: false, tension: 0.3, pointRadius: 3, borderWidth: 1.5 }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { y: { min: 0, max: 100, grid: { color: '#E4E7EC' }, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+{% set latest = results[-1] if results else none %}
+const radarData = [
+  {{ latest.ca_score if latest else 0 }},
+  {{ latest.exam_score if latest else 0 }},
+  {{ latest.attendance if latest else 0 }},
+  {{ latest.project_score if latest else 0 }},
+  {{ (profile.internships|length * 25) if profile else 0 }},
+  {{ (profile.certifications|length * 20) if profile else 0 }}
+].map(v => Math.min(v, 100));
+
+new Chart(document.getElementById('readinessRadar'), {
+  type: 'radar',
+  data: {
+    labels: ['CA Score', 'Exams', 'Attendance', 'Projects', 'Internships', 'Certifications'],
+    datasets: [{ label: 'Readiness', data: radarData, backgroundColor: 'rgba(123,13,30,0.10)', borderColor: '#7B0D1E', pointBackgroundColor: '#7B0D1E', borderWidth: 2 }]
+  },
+  options: { responsive: true, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: '#E4E7EC' } } }, plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}

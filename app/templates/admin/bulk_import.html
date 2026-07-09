@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import" class="active"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Bulk Import{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-upload"></i> Bulk Data Import</h3>
+  <p style="color:#7F8C8D;font-size:13px;margin-bottom:20px">Import students, teachers, grades, or documents from Excel (.xlsx) or CSV (.csv) files.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+    <div class="import-type-card" data-type="roster" onclick="selectType('roster')" style="border:2px solid #E5E8EC;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
+      <i class="fas fa-users" style="font-size:28px;color:#17A589;margin-bottom:8px;display:block"></i>
+      <div style="font-weight:600;font-size:14px">Roster</div>
+      <div style="font-size:12px;color:#7F8C8D">Students &amp; Teachers</div>
+    </div>
+    <div class="import-type-card" data-type="grades" onclick="selectType('grades')" style="border:2px solid #E5E8EC;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
+      <i class="fas fa-chart-line" style="font-size:28px;color:#2980B9;margin-bottom:8px;display:block"></i>
+      <div style="font-weight:600;font-size:14px">Grades</div>
+      <div style="font-size:12px;color:#7F8C8D">Semester Results</div>
+    </div>
+    <div class="import-type-card" data-type="documents" onclick="selectType('documents')" style="border:2px solid #E5E8EC;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s">
+      <i class="fas fa-file-alt" style="font-size:28px;color:#8E44AD;margin-bottom:8px;display:block"></i>
+      <div style="font-weight:600;font-size:14px">Documents</div>
+      <div style="font-size:12px;color:#7F8C8D">Attach files to students</div>
+    </div>
+  </div>
+
+  <form id="importForm" method="POST" action="/admin/bulk-import/preview" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="import_type" id="import_type" value="">
+
+    <div id="uploadArea" style="border:2px dashed #E5E8EC;border-radius:12px;padding:40px;text-align:center;margin-bottom:20px;cursor:pointer;display:none">
+      <i class="fas fa-cloud-upload-alt" style="font-size:36px;color:#17A589;margin-bottom:12px;display:block"></i>
+      <div style="font-size:14px;font-weight:500;color:#1B4F72" id="uploadLabel">Drag and drop your file here</div>
+      <div style="font-size:12px;color:#7F8C8D;margin:8px 0">or</div>
+      <input type="file" name="file" accept=".xlsx,.xls,.csv" id="fileInput" style="font-size:13px" onchange="this.form.submit()">
+    </div>
+  </form>
+
+  <div id="templateArea" style="display:none;margin-top:12px">
+    <a id="templateLink" href="#" class="btn btn-sm btn-secondary"><i class="fas fa-download"></i> Download Template</a>
+  </div>
+</div>
+<script>
+function selectType(type) {
+  document.querySelectorAll('.import-type-card').forEach(c => {
+    c.style.borderColor = '#E5E8EC';
+    c.style.background = 'transparent';
+  });
+  const el = document.querySelector(`.import-type-card[data-type="${type}"]`);
+  if (el) {
+    el.style.borderColor = type === 'roster' ? '#17A589' : type === 'grades' ? '#2980B9' : '#8E44AD';
+    el.style.background = '#F8F9FA';
+  }
+  document.getElementById('import_type').value = type;
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('uploadLabel').textContent = `Upload ${type.charAt(0).toUpperCase() + type.slice(1)} file`;
+  document.getElementById('templateArea').style.display = 'block';
+  document.getElementById('templateLink').href = `/admin/bulk-import/template/${type}`;
+}
+</script>
+{% endblock %}

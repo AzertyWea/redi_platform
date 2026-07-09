@@ -1,0 +1,123 @@
+﻿{% extends "base.html" %}
+{% block sidebar %}
+<a href="/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> Resultats</a>
+<a href="/student/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/student/coach" class="active"><i class="fas fa-robot"></i> AI Coach</a>
+{% endblock %}
+{% block page_title %}AI Career Coach{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-robot"></i> AI Career Coach</h1>
+  <p>Your personal career advisor — text and voice</p>
+</div>
+<div class="card" style="max-width:780px">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:16px;background:#F4F6F9;border-radius:10px">
+    <div style="width:52px;height:52px;border-radius:50%;background:#1B4F72;display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
+    <div>
+      <div style="font-weight:600;color:#1B4F72">REDI Coach</div>
+      <div style="font-size:12px;color:#17A589">● En ligne — ERI Score: <strong>{{ eri }}%</strong></div>
+    </div>
+    <button onclick="toggleAudio()" id="audio-btn" style="margin-left:auto" class="btn btn-outline btn-sm"><i class="fas fa-volume-up"></i> Audio ON</button>
+  </div>
+
+  <div id="chat-box" style="height:400px;overflow-y:auto;padding:16px;background:#F4F6F9;border-radius:8px;margin-bottom:16px;display:flex;flex-direction:column;gap:12px"></div>
+
+  <div style="display:flex;gap:10px">
+    <button id="mic-btn" class="btn btn-outline btn-sm" onclick="startVoice()" title="Parler au coach"><i class="fas fa-microphone"></i></button>
+    <input id="chat-input" class="form-control" placeholder="Posez votre question..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="btn btn-accent" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+  <div id="voice-status" style="font-size:12px;color:#17A589;margin-top:6px;display:none"><i class="fas fa-circle" style="color:red"></i> Ecoute en cours...</div>
+</div>
+
+<script>
+const ERI = {{ eri }};
+const NAME = "{{ name }}";
+const DEPT = "{{ dept }}";
+let audioEnabled = true;
+let recognition = null;
+
+const KB = [
+  {k:["hello","hi","hey","good morning","good evening"], r:`Hello ${NAME}! I'm your REDI career coach. Your current ERI Score is ${ERI}%. How can I help you today?`},
+  {k:["eri","score","employability"], r: ERI >= 80
+    ? `Excellent! Your ERI Score of ${ERI}% places you among the top students. Keep maintaining your grades and growing your project portfolio.`
+    : ERI >= 60
+    ? `Your ERI Score of ${ERI}% is good but can be improved. Focus on internships and certifications to gain points quickly.`
+    : `Your ERI Score of ${ERI}% needs urgent attention. Take part in more activities, get certifications, and improve your attendance.`},
+  {k:["improve","progress","increase"], r:`To improve your ERI Score, here are my top 3 priority tips:\n1. Complete an internship - counts for 20% of the score\n2. Get a certification (Google, Microsoft, etc.) - 10%\n3. Take part in academic projects - 15%`},
+  {k:["internship","stage","company"], r:`Internships are crucial - they make up 20% of your ERI. I recommend applying via LinkedIn, Jumia Jobs, or directly to tech companies in Douala like Afriland, Orange Cameroon, or MTN.`},
+  {k:["certification","certif"], r:`Recommended free certifications for your ${DEPT} profile:\n- Google Digital Garage (digital marketing)\n- Cisco NetAcad (networking)\n- Microsoft Learn (Azure/Office)\n- Coursera (free audit available)`},
+  {k:["job","work","employment","recruit"], r:`For your job search with an ERI of ${ERI}%, focus on companies hiring young graduates in Cameroon: Orange, MTN, Afriland First Bank, Bollore Africa Logistics.`},
+  {k:["grades","results","subject"], r:`Your academic grades count for 30% of your ERI Score - it's the most important factor! Aim for an average above 14/20 in all your subjects.`},
+  {k:["cv","resume","curriculum"], r:`For an effective CV in Cameroon:\n- Maximum 1 page if you have less than 2 years of experience\n- Include your REDI ERI Score\n- Highlight your academic projects\n- Add your certifications`},
+  {k:["stress","pressure","anxiety"], r:`It's normal to feel stress along your journey. Remember that your ERI of ${ERI}% reflects your efforts. Break your goals into small steps and celebrate every bit of progress.`},
+  {k:["language","english","french"], r:`Language proficiency is a major asset. Professional English is essential in bilingual Cameroon. I recommend the Duolingo app and BBC Learning English podcasts.`},
+  {k:["thanks","great","good","perfect"], r:`My pleasure! Don't hesitate to come back anytime. Keep up your efforts - your professional future is being built today. Good luck ${NAME}!`},
+];
+
+function getReply(msg) {
+  const m = msg.toLowerCase();
+  for (const item of KB) {
+    if (item.k.some(k => m.includes(k))) return item.r;
+  }
+  return `Je n ai pas compris votre question. Essayez de me demander : mon ERI Score, comment faire un stage, les certifications recommandees, ou comment trouver un emploi.`;
+}
+
+function addMsg(text, who) {
+  const box = document.getElementById('chat-box');
+  const d = document.createElement('div');
+  d.style.cssText = who === 'user'
+    ? 'background:#17A589;color:#fff;padding:12px 16px;border-radius:12px 12px 0 12px;max-width:75%;align-self:flex-end;font-size:14px;white-space:pre-line'
+    : 'background:#fff;border:1px solid #E5E8EC;padding:12px 16px;border-radius:12px 12px 12px 0;max-width:75%;font-size:14px;white-space:pre-line';
+  d.textContent = text;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  if (who === 'coach' && audioEnabled) speak(text);
+}
+
+function speak(text) {
+  const utt = new SpeechSynthesisUtterance(text.replace(/\n/g,' '));
+  utt.lang = 'fr-FR';
+  utt.rate = 0.95;
+  utt.pitch = 1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  document.getElementById('audio-btn').innerHTML = audioEnabled
+    ? '<i class="fas fa-volume-up"></i> Audio ON'
+    : '<i class="fas fa-volume-mute"></i> Audio OFF';
+  if (!audioEnabled) speechSynthesis.cancel();
+}
+
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addMsg(msg, 'user');
+  setTimeout(() => addMsg(getReply(msg), 'coach'), 600);
+}
+
+function startVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { alert('Votre navigateur ne supporte pas la reconnaissance vocale.'); return; }
+  recognition = new SpeechRecognition();
+  recognition.lang = 'fr-FR';
+  recognition.onstart = () => document.getElementById('voice-status').style.display='block';
+  recognition.onend   = () => document.getElementById('voice-status').style.display='none';
+  recognition.onresult = (e) => {
+    document.getElementById('chat-input').value = e.results[0][0].transcript;
+    sendMsg();
+  };
+  recognition.start();
+}
+
+window.onload = () => setTimeout(() => addMsg(`Hello ${NAME}! I'm your REDI career coach. Your ERI Score is ${ERI}%. How can I help you today?`, 'coach'), 500);
+</script>
+{% endblock %}
+
+

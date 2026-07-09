@@ -1,0 +1,30 @@
+﻿{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/employer/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/employer/search"><i class="fas fa-search"></i> Search Graduates</a>
+{% endblock %}
+{% block page_title %}Employer Dashboard{% endblock %}
+{% block content %}
+<div class="card" style="background:#1B4F72;border:none;margin-bottom:24px">
+  <h3 style="color:#fff;font-size:20px">Find Your Next Hire</h3>
+  <p style="color:#AED6F1;margin-top:6px;font-size:14px">Browse verified graduate profiles from Cameroon's top universities. Filtered to ERI score 70% and above.</p>
+  <a href="/employer/search" class="btn" style="background:#17A589;color:#fff;margin-top:16px"><i class="fas fa-search"></i> Search All Graduates</a>
+</div>
+<div class="card">
+  <h3><i class="fas fa-star"></i> Top Candidates (ERI 70%+)</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px">
+    {% for s in students %}
+    <div style="border:1px solid #E5E8EC;border-radius:12px;padding:20px;text-align:center">
+      <div style="width:52px;height:52px;border-radius:50%;background:#1B4F72;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:18px;font-weight:600;margin:0 auto 12px">{{ s.user.name[0] }}</div>
+      <div style="font-weight:500;font-size:14px">{{ s.user.name }}</div>
+      <div style="color:#7F8C8D;font-size:12px;margin:4px 0">{{ s.program }}</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:24px;color:#17A589;font-weight:600;margin:8px 0">{{ s.eri_score }}%</div>
+      <div style="font-size:11px;color:#7F8C8D">ERI Score</div>
+      <span class="badge {{ 'badge-success' if s.eri_score >= 75 else 'badge-warning' }}" style="margin-top:8px">{{ 'Top Candidate' if s.eri_score >= 75 else 'Good Match' }}</span>
+    </div>
+    {% else %}
+    <p style="color:#7F8C8D;font-size:13px">No candidates found.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

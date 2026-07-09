@@ -1,0 +1,42 @@
+﻿{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/upload" class="active"><i class="fas fa-upload"></i> Upload Results</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+  <a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Upload Results{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-upload"></i> Upload Semester Results</h3>
+  <p style="color:#7F8C8D;font-size:13px;margin-bottom:24px">Upload official results for students. Supported formats: Excel (.xlsx), CSV (.csv)</p>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div>
+        <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Select Semester</label>
+        <select name="semester" style="width:100%;padding:10px 14px;border:1px solid #E5E8EC;border-radius:8px;font-size:14px">
+          <option>Semester 1</option><option>Semester 2</option><option>Semester 3</option><option>Semester 4</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Select Program</label>
+        <select name="program" style="width:100%;padding:10px 14px;border:1px solid #E5E8EC;border-radius:8px;font-size:14px">
+          <option>HND Software Engineering</option><option>HND Business Management</option><option>BEng Computer Science</option>
+        </select>
+      </div>
+    </div>
+    <div style="border:2px dashed #E5E8EC;border-radius:12px;padding:40px;text-align:center;margin-bottom:20px;cursor:pointer">
+      <i class="fas fa-cloud-upload-alt" style="font-size:36px;color:#17A589;margin-bottom:12px;display:block"></i>
+      <div style="font-size:14px;font-weight:500;color:#1B4F72">Drag and drop your file here</div>
+      <div style="font-size:12px;color:#7F8C8D;margin:8px 0">or</div>
+      <input type="file" name="file" accept=".xlsx,.csv" style="font-size:13px">
+    </div>
+    <button type="submit" class="btn btn-primary btn-loading"><i class="fas fa-upload"></i> Upload and Process</button>
+  </form>
+</div>
+{% endblock %}
+
+

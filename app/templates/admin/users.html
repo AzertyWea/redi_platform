@@ -1,0 +1,124 @@
+﻿{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users" class="active"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block content %}
+<div class="page-header flex-between">
+  <div>
+    <h1>Manage Users</h1>
+    <p>Create and manage student, teacher, and employer accounts</p>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}" data-autohide><i class="fas fa-info-circle"></i> {{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<!-- Formulaire creation -->
+<div class="card mb-24">
+  <div class="card-header"><span class="card-title"><i class="fas fa-user-plus"></i> New account</span></div>
+  <form method="POST" Action="{{ url_for('admin.create_user') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="grid-2" style="gap:16px;padding:0 0 16px">
+      <div class="form-group">
+        <label class="form-label">Matricule *</label>
+        <input name="matricule" class="form-control" placeholder="ex: S200" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full name *</label>
+        <input name="full_name" class="form-control" placeholder="ex: Jean Dupont" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role *</label>
+        <select name="role" class="form-control" required>
+          <option value="">-- Select --</option>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="employer">Employer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <select name="department" id="dept-select-admin" class="form-control" onchange="loadProgramsAdmin(this.value)">
+          <option value="">-- Select school --</option>
+          {% for d in departments %}<option value="{{ d.name }}">{{ d.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group" id="filiere-group-admin" style="display:none">
+        <label class="form-label">Program / Field of study</label>
+        <select name="filiere" id="filiere-select-admin" class="form-control">
+          <option value="">-- Select school above first --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Temporary password *</label>
+        <input name="password" type="text" class="form-control" placeholder="ex: Redi2025!" required>
+        <span class="form-hint">User can change it after first login</span>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-accent btn-loading"><i class="fas fa-plus"></i> Create account</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('dept-select-admin').addEventListener('change', function() {
+  loadPrograms(this.value, 'filiere-select-admin');
+});
+document.querySelector('select[name="role"]').addEventListener('change', function() {
+  document.getElementById('filiere-group-admin').style.display =
+    (this.value === 'student') ? 'block' : 'none';
+});
+</script>
+
+<!-- Liste Users -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Existing accounts ({{ users|length }})</span>
+    <input id="table-search" class="form-control" style="width:220px" placeholder="Search...">
+  </div>
+  <div class="table-wrap">
+    <table class="redi-table">
+      <thead><tr>
+        <th>Matricule</th><th>Name</th><th>Role</th><th>Department</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr class="searchable-row">
+        <td><strong>{{ u.matricule }}</strong></td>
+        <td>{{ u.name }}</td>
+        <td>
+          {% if u.role == 'student' %}<span class="badge badge-primary">Student</span>
+          {% elif u.role == 'teacher' %}<span class="badge badge-success">Teacher</span>
+          {% else %}<span class="badge badge-warning">Employer</span>{% endif %}
+        </td>
+        <td class="text-muted">{{ u.department or '-' }}</td>
+        <td>
+          <form method="POST" Action="{{ url_for('admin.delete_user', user_id=u.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger btn-sm" data-confirm="Delete {{ u.name }} ?">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align:center;color:var(--muted)">No users found</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+

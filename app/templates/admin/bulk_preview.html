@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/bulk-import" class="active"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Preview Import{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-eye"></i> Preview Import — {{ data.stats.import_type|capitalize }}</h3>
+  <div class="stats-row" style="margin:16px 0">
+    <div class="stat-card"><div class="label">Total Rows</div><div class="value blue">{{ data.stats.total }}</div></div>
+    <div class="stat-card"><div class="label">Valid</div><div class="value teal">{{ data.stats.valid }}</div></div>
+    <div class="stat-card"><div class="label">Errors</div><div class="value amber">{{ data.stats.invalid }}</div></div>
+  </div>
+
+  {% if data.stats.invalid > 0 %}
+  <div class="alert alert-warning" style="margin-bottom:16px">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ data.stats.invalid }} row(s) have errors and will be skipped. Review below before confirming.
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/admin/bulk-import/confirm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="preview_json" value='{{ data | tojson | safe }}'>
+
+    <div style="overflow-x:auto;margin-bottom:20px">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            {% if data.stats.import_type == "roster" %}
+            <th>Matricule</th><th>Name</th><th>Role</th><th>Department</th><th>Program</th>
+            {% elif data.stats.import_type == "grades" %}
+            <th>Matricule</th><th>CA Score</th><th>Exam Score</th><th>Semester</th>
+            {% elif data.stats.import_type == "documents" %}
+            <th>Matricule</th><th>Doc Type</th><th>Filename</th>
+            {% endif %}
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data.rows %}
+          <tr style="{{ 'background:#FDF2F2' if not row._valid else '' }}">
+            <td>{{ loop.index }}</td>
+            {% if data.stats.import_type == "roster" %}
+            <td><strong>{{ row.matricule }}</strong></td>
+            <td>{{ row.name }}</td>
+            <td><span class="badge badge-{{ 'success' if row.role == 'student' else 'primary' if row.role == 'teacher' else 'warning' }}">{{ row.role }}</span></td>
+            <td>{{ row.department or '-' }}</td>
+            <td>{{ row.program or '-' }}</td>
+            {% elif data.stats.import_type == "grades" %}
+            <td><strong>{{ row.matricule }}</strong></td>
+            <td>{{ row.ca_score }}</td>
+            <td>{{ row.exam_score }}</td>
+            <td>S{{ row.semester_number or 1 }}</td>
+            {% elif data.stats.import_type == "documents" %}
+            <td><strong>{{ row.matricule }}</strong></td>
+            <td>{{ row.doc_type }}</td>
+            <td>{{ row.filename }}</td>
+            {% endif %}
+            <td>
+              {% if row._valid %}
+              <span class="badge badge-success">Valid</span>
+              {% else %}
+              <span class="badge badge-danger">Error: {{ row._errors|join('; ') }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <a href="/admin/bulk-import" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+      {% if data.stats.valid > 0 %}
+      <button type="submit" class="btn btn-primary btn-loading" data-confirm="Import {{ data.stats.valid }} valid rows? {{ data.stats.invalid }} rows with errors will be skipped.">
+        <i class="fas fa-check"></i> Confirm Import ({{ data.stats.valid }} rows)
+      </button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}
