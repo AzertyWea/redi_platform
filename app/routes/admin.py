@@ -3,7 +3,8 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from functools import wraps
 from sqlalchemy import or_
-from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult
+from datetime import time as dtime
+from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult, SchoolClass, AuditLog, Department, Program, Course, ScheduleEntry
 from app import db
 
 def admin_required(f):
@@ -101,9 +102,6 @@ def teacher_detail(user_id):
         viewed=viewed, courses=courses, schedule=schedule,
         assignments=assignments, quizzes=quizzes,
         recent_attendance=recent_attendance, students=students)
-
-from app.models import SchoolClass, AuditLog
-from app.services.eri_engine import calculate_eri
 
 @admin_bp.route("/classes")
 @login_required
@@ -205,6 +203,7 @@ def announce():
 
 @admin_bp.route("/users")
 @login_required
+@admin_required
 def users():
     from app.models import Department
     all_users = User.query.filter(User.role != "admin").order_by(User.role).all()
@@ -213,6 +212,7 @@ def users():
 
 @admin_bp.route("/users/create", methods=["POST"])
 @login_required
+@admin_required
 def create_user():
     matricule = request.form.get("matricule","").strip()
     name      = request.form.get("full_name","").strip()
@@ -239,6 +239,7 @@ def create_user():
 
 @admin_bp.route("/users/delete/<int:user_id>", methods=["POST"])
 @login_required
+@admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
@@ -250,6 +251,7 @@ from app.services.eri_engine import calculate_eri
 
 @admin_bp.route("/recalculate-eri", methods=["POST"])
 @login_required
+@admin_required
 def recalculate_eri():
     students = StudentProfile.query.all()
     for s in students:
@@ -258,10 +260,9 @@ def recalculate_eri():
     flash(f"ERI recalculated for {len(students)} students.", "success")
     return redirect(url_for("admin.dashboard"))
 
-from app.models import Department, Program, Course, SchoolClass
-
 @admin_bp.route("/structure", methods=["GET","POST"])
 @login_required
+@admin_required
 def structure():
     if request.method == "POST":
         action = request.form.get("action")
@@ -325,11 +326,9 @@ def structure():
     return render_template("admin/structure.html", departments=departments, programs=programs,
         courses=courses, classes=classes, teachers=teachers)
 
-from app.models import ScheduleEntry
-from datetime import time as dtime
-
 @admin_bp.route("/timetable", methods=["GET","POST"])
 @login_required
+@admin_required
 def timetable():
     if request.method == "POST":
         title         = request.form.get("title","").strip()
@@ -372,6 +371,7 @@ def timetable():
 
 @admin_bp.route("/timetable/delete/<int:entry_id>", methods=["POST"])
 @login_required
+@admin_required
 def delete_schedule_entry(entry_id):
     entry = ScheduleEntry.query.get_or_404(entry_id)
     db.session.delete(entry)
@@ -455,6 +455,7 @@ def audit_log():
 
 @admin_bp.route("/timetable/upload", methods=["GET", "POST"])
 @login_required
+@admin_required
 def timetable_upload():
     from app.services.timetable_import import extract_timetable_from_pdf
     if request.method == "POST":
@@ -478,6 +479,7 @@ def timetable_upload():
 
 @admin_bp.route("/timetable/upload/confirm", methods=["POST"])
 @login_required
+@admin_required
 def timetable_upload_confirm():
     shared_class_id = request.form.get("shared_class_id", type=int)
     shared_academic_year = request.form.get("shared_academic_year", "").strip()

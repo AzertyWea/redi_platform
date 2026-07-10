@@ -42,9 +42,11 @@ def dashboard():
     total = StudentProfile.query.filter(StudentProfile.is_public == True).count()
     top = StudentProfile.query.filter(StudentProfile.is_public == True, StudentProfile.eri_score >= 80).count()
     top_students = StudentProfile.query.filter(StudentProfile.is_public == True).order_by(StudentProfile.eri_score.desc()).limit(6).all()
-    unread = Message.query.filter_by(sender_id=User.id).join(Conversation).filter(
-        Conversation.employer_id == current_user.id, Message.is_read == False
-    ).count() if False else 0
+    unread = Message.query.join(Conversation).filter(
+        Conversation.employer_id == current_user.id,
+        Message.sender_id != current_user.id,
+        Message.is_read == False
+    ).count()
     convos = Conversation.query.filter_by(employer_id=current_user.id)\
         .order_by(Conversation.created_at.desc()).limit(5).all()
     return render_template("employer/dashboard.html",

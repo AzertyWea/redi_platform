@@ -124,7 +124,7 @@ for cls in classes:
             ("Exam Results","Your semester results are now available."),
             ("Schedule Update","Your timetable has been updated.")]
         for ntitle, nmsg in random.sample(notif_msgs, random.randint(1,3)):
-            db.session.add(Notification(user_id=u.id, title=ntitle, message=nmsg))
+            db.session.add(Notification(recipient_id=u.id, recipient_role="student", type="announcement", title=ntitle, body=nmsg))
 
         students_created += 1
     db.session.commit()

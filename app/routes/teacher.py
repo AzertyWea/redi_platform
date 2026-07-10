@@ -1,6 +1,6 @@
 ﻿from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file
 from flask_login import login_required, current_user
-from app.models import StudentProfile, AttendanceRecord, User
+from app.models import StudentProfile, AttendanceRecord, User, Assignment, Quiz, TeacherObservation
 from app import db
 from datetime import datetime
 
@@ -83,9 +83,6 @@ def attendance():
         available_classes=available_classes, selected_class=selected_class,
         students=students)
 
-from app.models import Assignment, Quiz, TeacherObservation, StudentProfile, AttendanceRecord
-from flask import request, redirect, url_for, flash
-from app import db
 from datetime import datetime as dt
 
 @teacher_bp.route("/assignments", methods=["GET","POST"])
@@ -97,7 +94,7 @@ def assignments():
             course=request.form.get("course","").strip(),
             title=request.form.get("title","").strip(),
             description=request.form.get("description","").strip(),
-            due_date=dt.strptime(request.form.get("due_date"),"%Y-%m-%d") if request.form.get("due_date") else None,
+            due_date=datetime.strptime(request.form.get("due_date"),"%Y-%m-%d") if request.form.get("due_date") else None,
             max_score=float(request.form.get("max_score",20))
         )
         db.session.add(a)
@@ -130,8 +127,8 @@ def observations():
         course_id = request.form.get("course_id", type=int)
         class_id = request.form.get("class_id", type=int)
         course = Course.query.get(course_id) if course_id else None
-        o = TeacherObservation(
-            student_id=request.form.get("student_id"),
+            o = TeacherObservation(
+                student_id=request.form.get("student_id", type=int),
             teacher_id=current_user.id,
             course=course.name if course else request.form.get("course","").strip(),
             course_id=course_id,
