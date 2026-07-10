@@ -59,5 +59,12 @@
   </div>
 </div>
 <div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99"></div>
+
+<button onclick="openAiUpload()" title="AI Document Analysis" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#7B0D1E;color:#fff;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(123,13,30,0.35);z-index:300;transition:all .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+  <i class="fas fa-robot"></i>
+</button>
+
+<input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+{% include 'ai_upload_modal.html' %}
 </body>
 </html>

@@ -41,10 +41,12 @@ def create_app():
     from app.routes.teacher import teacher_bp
     from app.routes.admin import admin_bp
     from app.routes.employer import employer_bp
+    from app.routes.ai_upload import ai_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(employer_bp, url_prefix='/employer')
+    app.register_blueprint(ai_bp)
     return app

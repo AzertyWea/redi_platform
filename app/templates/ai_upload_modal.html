@@ -1,0 +1,120 @@
+<div id="ai-upload-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,10,10,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeAiUpload()">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:600px;padding:32px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto">
+    <button onclick="closeAiUpload()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:#A88;cursor:pointer"><i class="fas fa-times"></i></button>
+    <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1.2rem;color:#1A0A0A;margin-bottom:4px"><i class="fas fa-robot" style="color:#7B0D1E"></i> AI Document Analysis</div>
+    <p style="font-size:13px;color:#A88;margin-bottom:20px">Upload a file — AI extracts data and fills parameters automatically</p>
+    <div id="ai-upload-dropzone" style="border:2px dashed #EDE0E0;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FAF6F6" onmouseover="this.style.borderColor='#7B0D1E'" onmouseout="this.style.borderColor='#EDE0E0'">
+      <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem;color:#7B0D1E;display:block;margin-bottom:12px"></i>
+      <p style="font-weight:600;font-size:14px;color:#1A0A0A">Drop a file here or click to browse</p>
+      <p style="font-size:11px;color:#A88;margin-top:4px">Supports PDF, Excel, CSV, images (JPG, PNG)</p>
+      <input type="file" id="ai-upload-file" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png" style="display:none" onchange="handleAiFile(this)">
+    </div>
+    <div id="ai-upload-status" style="display:none;margin-top:16px"></div>
+    <div id="ai-upload-preview" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-weight:600;font-size:14px;color:#1A0A0A"><i class="fas fa-list"></i> Extracted data</span>
+        <span id="ai-data-type-badge" style="font-size:11px;background:#FBEFEF;color:#7B0D1E;padding:3px 10px;border-radius:12px;font-weight:600"></span>
+      </div>
+      <div style="max-height:200px;overflow-y:auto;border:1px solid #EDE0E0;border-radius:8px">
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr id="ai-preview-header" style="background:#FAF6F6;font-weight:600"></tr></thead>
+          <tbody id="ai-preview-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="cancelAiUpload()" style="padding:10px 20px;border:1.5px solid #EDE0E0;border-radius:8px;background:#fff;color:#5C4A4A;font-weight:600;font-size:13px;cursor:pointer">Cancel</button>
+        <button onclick="confirmAiUpload()" style="padding:10px 20px;border:none;border-radius:8px;background:#7B0D1E;color:#fff;font-weight:600;font-size:13px;cursor:pointer"><i class="fas fa-check"></i> Apply to dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function openAiUpload(){
+  document.getElementById('ai-upload-overlay').style.display = 'flex';
+  document.getElementById('ai-upload-file').value = '';
+  document.getElementById('ai-upload-preview').style.display = 'none';
+  document.getElementById('ai-upload-status').style.display = 'none';
+}
+function closeAiUpload(){
+  document.getElementById('ai-upload-overlay').style.display = 'none';
+}
+function cancelAiUpload(){
+  document.getElementById('ai-upload-preview').style.display = 'none';
+  document.getElementById('ai-upload-status').style.display = 'none';
+}
+document.getElementById('ai-upload-dropzone').addEventListener('click', function(){
+  document.getElementById('ai-upload-file').click();
+});
+
+function handleAiFile(input){
+  var file = input.files[0];
+  if(!file) return;
+  var status = document.getElementById('ai-upload-status');
+  status.style.display = 'block';
+  status.innerHTML = '<div style="text-align:center;padding:12px"><i class="fas fa-spinner fa-spin" style="color:#7B0D1E;font-size:1.2rem"></i><p style="font-size:13px;color:#A88;margin-top:8px">AI analyzing file...</p></div>';
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('csrf_token', document.querySelector('input[name="csrf_token"]') ? document.querySelector('input[name="csrf_token"]').value : '');
+  fetch('/ai-upload/analyze', {method:'POST', body:formData})
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(data.error){
+        status.innerHTML = '<div style="background:#FBEFEF;color:#7B0D1E;padding:10px;border-radius:8px;font-size:13px">'+data.error+'</div>';
+        return;
+      }
+      status.style.display = 'none';
+      showAiPreview(data);
+    })
+    .catch(function(){
+      status.innerHTML = '<div style="background:#FBEFEF;color:#7B0D1E;padding:10px;border-radius:8px;font-size:13px">Upload failed. Try again.</div>';
+    });
+}
+
+function showAiPreview(data){
+  var preview = document.getElementById('ai-upload-preview');
+  preview.style.display = 'block';
+  document.getElementById('ai-data-type-badge').textContent = data.data_type || 'general';
+  var header = document.getElementById('ai-preview-header');
+  var body = document.getElementById('ai-preview-body');
+  header.innerHTML = '';
+  body.innerHTML = '';
+  if(data.preview && data.preview.length > 0){
+    var cols = Object.keys(data.preview[0]);
+    header.innerHTML = cols.map(function(c){return '<td style="padding:8px 10px;border-bottom:1px solid #EDE0E0">'+c+'</td>'}).join('');
+    var maxRows = Math.min(data.preview.length, 8);
+    for(var i=0; i<maxRows; i++){
+      var row = data.preview[i];
+      body.innerHTML += '<tr>'+cols.map(function(c){return '<td style="padding:8px 10px;border-bottom:1px solid #f5f0f0;color:#5C4A4A">'+(row[c]||'')+'</td>'}).join('')+'</tr>';
+    }
+    if(data.preview.length > 8){
+      body.innerHTML += '<tr><td colspan="'+cols.length+'" style="padding:8px;text-align:center;font-size:11px;color:#A88">... and '+(data.preview.length-8)+' more rows</td></tr>';
+    }
+  }
+  window._aiUploadData = data;
+}
+
+function confirmAiUpload(){
+  if(!window._aiUploadData) return;
+  var btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+  fetch('/ai-upload/commit', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':document.querySelector('input[name="csrf_token"]')?document.querySelector('input[name="csrf_token"]').value:''},
+    body:JSON.stringify({data: window._aiUploadData, target: window._aiUploadTarget || 'auto'})
+  }).then(function(r){return r.json()}).then(function(resp){
+    if(resp.success){
+      closeAiUpload();
+      location.reload();
+    } else {
+      alert('Error: '+resp.error);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check"></i> Apply to dashboard';
+    }
+  }).catch(function(){
+    alert('Commit failed');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> Apply to dashboard';
+  });
+}
+</script>
