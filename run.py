@@ -77,8 +77,21 @@ def seed_data():
     db.session.commit()
     print('Seed data loaded.')
 
+def migrate_schema():
+    import sqlalchemy as sa
+    inspector = sa.inspect(db.engine)
+    cols = [c["name"] for c in inspector.get_columns("student_profiles")]
+    if "availability" not in cols:
+        db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN availability VARCHAR(30) DEFAULT 'available_now'"))
+    if "cv_file" not in cols:
+        db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN cv_file VARCHAR(300)"))
+    if "is_public" not in cols:
+        db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN is_public BOOLEAN DEFAULT 0"))
+    db.session.commit()
+
 with app.app_context():
     db.create_all()
+    migrate_schema()
     seed_data()
 
 if __name__ == '__main__':
