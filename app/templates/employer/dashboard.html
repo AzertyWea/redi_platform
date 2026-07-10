@@ -2,29 +2,65 @@
 {% block sidebar %}
 <a href="/employer/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
 <a href="/employer/search"><i class="fas fa-search"></i> Search Graduates</a>
+<a href="/employer/chat"><i class="fas fa-comments"></i> Messages{% if unread > 0 %} <span class="badge badge-danger" style="margin-left:auto">{{ unread }}</span>{% endif %}</a>
 {% endblock %}
-{% block page_title %}Employer Dashboard{% endblock %}
+{% block page_title %}Talent Search{% endblock %}
 {% block content %}
-<div class="card" style="background:#1B4F72;border:none;margin-bottom:24px">
-  <h3 style="color:#fff;font-size:20px">Find Your Next Hire</h3>
-  <p style="color:#AED6F1;margin-top:6px;font-size:14px">Browse verified graduate profiles from Cameroon's top universities. Filtered to ERI score 70% and above.</p>
-  <a href="/employer/search" class="btn" style="background:#17A589;color:#fff;margin-top:16px"><i class="fas fa-search"></i> Search All Graduates</a>
+<div class="card" style="background:linear-gradient(135deg,#1B4F72,#154360);border:none;margin-bottom:24px;padding:32px">
+  <h3 style="color:#fff;font-size:22px;border:none;padding:0;margin:0">Find Your Next Hire</h3>
+  <p style="color:#AED6F1;margin-top:8px;font-size:14px">Tell us what you're looking for and we'll match you with verified graduates.</p>
+  <form method="POST" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:20px">
+    <input type="text" name="program" placeholder="Program (e.g. Software Engineering)" style="flex:2;min-width:180px;padding:10px 14px;border:none;border-radius:8px;font-size:13px">
+    <input type="text" name="skills" placeholder="Skills (e.g. Python, Django)" style="flex:2;min-width:180px;padding:10px 14px;border:none;border-radius:8px;font-size:13px">
+    <input type="number" name="eri_min" placeholder="Min ERI (0-100)" min="0" max="100" style="flex:1;min-width:100px;padding:10px 14px;border:none;border-radius:8px;font-size:13px">
+    <input type="text" name="dept" placeholder="Department" style="flex:1;min-width:120px;padding:10px 14px;border:none;border-radius:8px;font-size:13px">
+    <button type="submit" class="btn" style="background:#17A589;color:#fff;padding:10px 24px"><i class="fas fa-search"></i> Search</button>
+  </form>
 </div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="label">Total Graduates</div><div class="value teal" style="font-size:26px">{{ total }}</div></div>
+  <div class="stat-card"><div class="label">Top Candidates (ERI 80%+)</div><div class="value amber" style="font-size:26px">{{ top }}</div></div>
+  <div class="stat-card"><div class="label">Open Chats</div><div class="value blue" style="font-size:26px">{{ convos|length }}</div></div>
+</div>
+
 <div class="card">
-  <h3><i class="fas fa-star"></i> Top Candidates (ERI 70%+)</h3>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px">
-    {% for s in students %}
-    <div style="border:1px solid #E5E8EC;border-radius:12px;padding:20px;text-align:center">
-      <div style="width:52px;height:52px;border-radius:50%;background:#1B4F72;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:18px;font-weight:600;margin:0 auto 12px">{{ s.user.name[0] }}</div>
-      <div style="font-weight:500;font-size:14px">{{ s.user.name }}</div>
-      <div style="color:#7F8C8D;font-size:12px;margin:4px 0">{{ s.program }}</div>
-      <div style="font-family:'Poppins',sans-serif;font-size:24px;color:#17A589;font-weight:600;margin:8px 0">{{ s.eri_score }}%</div>
-      <div style="font-size:11px;color:#7F8C8D">ERI Score</div>
-      <span class="badge {{ 'badge-success' if s.eri_score >= 75 else 'badge-warning' }}" style="margin-top:8px">{{ 'Top Candidate' if s.eri_score >= 75 else 'Good Match' }}</span>
+  <h3><i class="fas fa-star"></i> Top Candidates</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:12px">
+    {% for s in top_students %}
+    <div style="border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:all .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:18px;font-weight:600;margin:0 auto 10px">{{ s.user.name[0] }}</div>
+      <div style="font-weight:600;font-size:14px">{{ s.user.name }}</div>
+      <div style="color:var(--muted);font-size:12px;margin:3px 0">{{ s.program }}</div>
+      <div style="font-family:var(--font-head);font-size:28px;color:#17A589;font-weight:700;margin:8px 0">{{ s.eri_score }}%</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Employability Readiness Index</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+        <a href="/employer/student/{{ s.id }}" class="btn btn-sm btn-outline"><i class="fas fa-user"></i> Profile</a>
+        <a href="/employer/chat/{{ s.user.id }}" class="btn btn-sm btn-primary"><i class="fas fa-comment"></i> Message</a>
+      </div>
     </div>
     {% else %}
-    <p style="color:#7F8C8D;font-size:13px">No candidates found.</p>
+    <p style="color:var(--muted);font-size:13px;text-align:center;padding:30px 0">No graduate profiles yet.</p>
     {% endfor %}
   </div>
 </div>
+
+{% if convos %}
+<div class="card">
+  <h3><i class="fas fa-comments"></i> Recent Conversations</h3>
+  <table class="table">
+    <thead><tr><th>Student</th><th>Program</th><th>Last Activity</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for c in convos %}
+      <tr>
+        <td><strong>{{ c.student.name }}</strong></td>
+        <td>{{ c.student.profile.program if c.student.profile else '-' }}</td>
+        <td style="font-size:12px;color:var(--muted)">{{ c.created_at.strftime('%d %b %Y') if c.created_at else '-' }}</td>
+        <td><a href="/employer/chat/{{ c.student.id }}" class="btn btn-sm btn-primary"><i class="fas fa-comment"></i> Chat</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,7 +1,8 @@
 ﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from flask_login import login_required, current_user
 from app.models import (StudentProfile, SemesterResult, Document, Notification,
-    ScheduleEntry, Program, Department, Internship, Certification, Project)
+    ScheduleEntry, Program, Department, Internship, Certification, Project,
+    Conversation, Message)
 from app import db
 from datetime import datetime as dt
 import os
@@ -73,6 +74,51 @@ def coach():
         eri=profile.eri_score if profile else 0,
         name=current_user.name,
         dept=current_user.department or "Informatique")
+
+@student_bp.route("/messages")
+@login_required
+def messages():
+    convos = Conversation.query.filter_by(student_id=current_user.id)\
+        .order_by(Conversation.created_at.desc()).all()
+    unread_counts = {}
+    for c in convos:
+        unread_counts[c.id] = Message.query.filter_by(conversation_id=c.id, is_read=False)\
+            .filter(Message.sender_id != current_user.id).count()
+    return render_template("student/messages.html", convos=convos, unread_counts=unread_counts)
+
+@student_bp.route("/messages/<int:conversation_id>")
+@login_required
+def view_conversation(conversation_id):
+    convo = Conversation.query.get_or_404(conversation_id)
+    if convo.student_id != current_user.id:
+        flash("Access denied.", "danger")
+        return redirect(url_for("student.messages"))
+    Message.query.filter_by(conversation_id=convo.id, is_read=False)\
+        .filter(Message.sender_id != current_user.id)\
+        .update({"is_read": True})
+    db.session.commit()
+    return render_template("student/conversation.html", convo=convo)
+
+@student_bp.route("/messages/<int:conversation_id>/send", methods=["POST"])
+@login_required
+def reply_message(conversation_id):
+    convo = Conversation.query.get_or_404(conversation_id)
+    if convo.student_id != current_user.id:
+        return jsonify({"error": "Forbidden"}), 403
+    content = request.form.get("content", "").strip()
+    if not content:
+        return jsonify({"error": "Empty message"}), 400
+    msg = Message(conversation_id=convo.id, sender_id=current_user.id, content=content)
+    db.session.add(msg)
+    from app.services.notification_service import emit_notification
+    emit_notification(
+        recipient_id=convo.employer_id, recipient_role="employer",
+        type_="message", title="New Message from Student",
+        body=f"{current_user.name}: {content[:80]}",
+        link="/employer/chat",
+    )
+    db.session.commit()
+    return jsonify({"success": True, "message_id": msg.id})
 
 @student_bp.route("/report/pdf")
 @login_required

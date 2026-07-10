@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/employer/search"><i class="fas fa-search"></i> Search Graduates</a>
+<a href="/employer/chat"><i class="fas fa-comments"></i> Messages</a>
+{% endblock %}
+{% block page_title %}{{ p.user.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:26px;font-weight:700;flex-shrink:0">{{ p.user.name[0] }}</div>
+    <div style="flex:1;min-width:200px">
+      <h3 style="font-size:20px;border:none;padding:0;margin:0">{{ p.user.name }}</h3>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">{{ p.program }} &middot; {{ p.user.department or '' }}</p>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <a href="/employer/chat/{{ p.user.id }}" class="btn btn-primary btn-sm"><i class="fas fa-comment"></i> Message</a>
+      </div>
+    </div>
+    <div style="text-align:center;padding:12px 24px;background:var(--bg);border-radius:12px">
+      <div style="font-family:var(--font-head);font-size:32px;color:#17A589;font-weight:700">{{ p.eri_score }}%</div>
+      <div style="font-size:11px;color:var(--muted)">ERI Score</div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h3><i class="fas fa-info-circle"></i> About</h3>
+    <table class="table" style="min-width:unset">
+      <tr><td style="width:120px;font-weight:600">Email</td><td>{{ p.user.email }}</td></tr>
+      <tr><td style="font-weight:600">Program</td><td>{{ p.program or '-' }}</td></tr>
+      <tr><td style="font-weight:600">Department</td><td>{{ p.user.department or '-' }}</td></tr>
+      <tr><td style="font-weight:600">Semester</td><td>{{ p.current_semester or '-' }}</td></tr>
+      <tr><td style="font-weight:600">Bio</td><td>{{ p.bio or 'No bio provided.' }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-tools"></i> Skills</h3>
+    {% if p.skills %}
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      {% for sk in p.skills.split(',') %}
+      <span style="padding:4px 12px;background:var(--bg);border-radius:20px;font-size:12px;color:var(--text)">{{ sk.strip() }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted);font-size:13px">No skills listed.</p>
+    {% endif %}
+    <h3 style="margin-top:20px"><i class="fas fa-briefcase"></i> Internships</h3>
+    {% for i in p.internships %}
+    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="font-weight:600;font-size:13px">{{ i.role_title }} at {{ i.company_name }}</div>
+      <div style="font-size:12px;color:var(--muted)">{{ i.start_date.strftime('%b %Y') if i.start_date }} - {{ i.end_date.strftime('%b %Y') if i.end_date }}</div>
+    </div>
+    {% else %}
+    <p style="color:var(--muted);font-size:13px">No internships recorded.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h3><i class="fas fa-file"></i> Verified Documents</h3>
+  <table class="table">
+    <thead><tr><th>Type</th><th>Filename</th><th>Verified</th></tr></thead>
+    <tbody>
+      {% for d in docs %}
+      <tr><td>{{ d.doc_type }}</td><td>{{ d.filename }}</td><td><span class="badge badge-success">Verified</span></td></tr>
+      {% else %}
+      <tr><td colspan="3" style="text-align:center;color:var(--muted)">No verified documents yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3><i class="fas fa-certificate"></i> Certifications</h3>
+  {% for c in p.certifications %}
+  <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+    <div style="font-weight:600;font-size:13px">{{ c.title }}</div>
+    <div style="font-size:12px;color:var(--muted)">{{ c.issuer }} &middot; {{ c.date_obtained.strftime('%b %Y') if c.date_obtained }}</div>
+  </div>
+  {% else %}
+  <p style="color:var(--muted);font-size:13px">No certifications recorded.</p>
+  {% endfor %}
+</div>
+{% endblock %}

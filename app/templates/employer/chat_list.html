@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/employer/search"><i class="fas fa-search"></i> Search Graduates</a>
+<a href="/employer/chat" class="active"><i class="fas fa-comments"></i> Messages</a>
+{% endblock %}
+{% block page_title %}Messages{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-comments"></i> Conversations</h3>
+  {% for c in convos %}
+  <a href="/employer/chat/{{ c.student.id }}" style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background .15s" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0">{{ c.student.name[0] }}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:14px">{{ c.student.name }}</div>
+      <div style="font-size:12px;color:var(--muted)">{{ c.student.profile.program if c.student.profile else '' }}</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">{{ c.created_at.strftime('%d %b') if c.created_at }}</div>
+  </a>
+  {% else %}
+  <p style="text-align:center;color:var(--muted);padding:30px 0">No conversations yet. Search for graduates and send a message!</p>
+  {% endfor %}
+</div>
+{% endblock %}

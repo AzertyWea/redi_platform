@@ -292,6 +292,26 @@ class AuditLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship("User", backref="audit_logs")
 
+class Conversation(db.Model):
+    __tablename__ = "conversations"
+    id = db.Column(db.Integer, primary_key=True)
+    employer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    employer = db.relationship("User", foreign_keys=[employer_id], backref="employer_conversations")
+    student = db.relationship("User", foreign_keys=[student_id], backref="student_conversations")
+
+class Message(db.Model):
+    __tablename__ = "messages"
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    conversation = db.relationship("Conversation", backref="messages")
+    sender = db.relationship("User", backref="sent_messages")
+
 class ScheduleEntry(db.Model):
     __tablename__ = "schedule_entries"
     id = db.Column(db.Integer, primary_key=True)
