@@ -127,8 +127,8 @@ def observations():
         course_id = request.form.get("course_id", type=int)
         class_id = request.form.get("class_id", type=int)
         course = Course.query.get(course_id) if course_id else None
-            o = TeacherObservation(
-                student_id=request.form.get("student_id", type=int),
+        o = TeacherObservation(
+            student_id=request.form.get("student_id", type=int),
             teacher_id=current_user.id,
             course=course.name if course else request.form.get("course","").strip(),
             course_id=course_id,

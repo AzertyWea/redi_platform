@@ -80,13 +80,27 @@ def seed_data():
 def migrate_schema():
     import sqlalchemy as sa
     inspector = sa.inspect(db.engine)
-    cols = [c["name"] for c in inspector.get_columns("student_profiles")]
-    if "availability" not in cols:
+
+    stu_cols = [c["name"] for c in inspector.get_columns("student_profiles")]
+    if "availability" not in stu_cols:
         db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN availability VARCHAR(30) DEFAULT 'available_now'"))
-    if "cv_file" not in cols:
+    if "cv_file" not in stu_cols:
         db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN cv_file VARCHAR(300)"))
-    if "is_public" not in cols:
+    if "is_public" not in stu_cols:
         db.session.execute(sa.text("ALTER TABLE student_profiles ADD COLUMN is_public BOOLEAN DEFAULT 0"))
+
+    # Fix old notifications schema (user_id/message -> recipient_id/body)
+    try:
+        notif_cols = [c["name"] for c in inspector.get_columns("notifications")]
+    except Exception:
+        notif_cols = []
+    if notif_cols and "recipient_id" not in notif_cols:
+        db.session.execute(sa.text("DROP TABLE IF EXISTS notifications"))
+        db.session.commit()
+        from app.models import Notification
+        Notification.__table__.create(db.engine)
+        print("Migrated notifications table.")
+
     db.session.commit()
 
 with app.app_context():
