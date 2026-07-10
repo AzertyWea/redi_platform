@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block sidebar %}
+<div class="menu-label">Admin</div>
+<a href="/admin/dashboard"><i class="fas fa-chart-pie"></i> Overview</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/classes"><i class="fas fa-school"></i> Classes</a>
+<a href="/admin/ml" class="active"><i class="fas fa-brain"></i> AI Predictions</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+<a href="/admin/announce"><i class="fas fa-bullhorn"></i> Announce</a>
+<a href="/admin/audit-log"><i class="fas fa-history"></i> Audit Log</a>
+{% endblock %}
+{% block page_title %}AI REDI Predictions{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-brain"></i> AI REDI Readiness Predictor</h1>
+  <p>Logistic Regression model trained on student data to predict REDI readiness (ERI &ge; 70%)</p>
+</div>
+
+<div class="two-col" style="margin-bottom:16px">
+  <div class="corp-panel">
+    <div class="corp-panel-head"><h3>Model Status</h3></div>
+    <div style="padding:8px 0">
+      {% if has_model %}
+      <div style="display:flex;align-items:center;gap:10px;color:#17A589;font-weight:600">
+        <i class="fas fa-check-circle" style="font-size:20px"></i> Model is trained and active
+      </div>
+      {% else %}
+      <div style="display:flex;align-items:center;gap:10px;color:#B03A2E;font-weight:600">
+        <i class="fas fa-exclamation-triangle" style="font-size:20px"></i> Model not yet trained
+      </div>
+      <p style="margin-top:8px;font-size:13px;color:#6B7280">Students must have semester results and activity data before training.</p>
+      {% endif %}
+      <form method="POST" action="/admin/ml/train" style="margin-top:16px">
+        <button class="btn btn-accent"><i class="fas fa-cogs"></i> Train / Retrain Model</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="corp-panel">
+    <div class="corp-panel-head"><h3>Prediction Summary</h3></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px 0">
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#1B4F72">{{ stats.total_predictions or 0 }}</div>
+        <div style="font-size:12px;color:#6B7280">Students Predicted</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#17A589">{{ stats.predicted_ready or 0 }}</div>
+        <div style="font-size:12px;color:#6B7280">Predicted REDI Ready</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#B03A2E">{{ stats.predicted_not_ready or 0 }}</div>
+        <div style="font-size:12px;color:#6B7280">Predicted At Risk</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#F39C12">{{ stats.avg_probability or 0 }}%</div>
+        <div style="font-size:12px;color:#6B7280">Avg Confidence</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="corp-panel">
+  <div class="corp-panel-head"><h3>All Student Predictions</h3></div>
+  <table class="corp-table">
+    <thead><tr><th>Student</th><th>Matricule</th><th>Class</th><th>ERI Score</th><th>AI Prediction</th><th>Confidence</th><th>Top Factors</th></tr></thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td><a href="/admin/student/{{ p.student.user.id }}" style="color:#1B4F72;font-weight:500">{{ p.student.user.name }}</a></td>
+        <td>{{ p.student.user.matricule }}</td>
+        <td>{{ p.student.school_class.display_name if p.student.school_class else '-' }}</td>
+        <td>{{ p.student.eri_score or 0 }}%</td>
+        <td>
+          {% if p.prediction %}
+          <span class="corp-pill positive">REDI Ready</span>
+          {% else %}
+          <span class="corp-pill negative">At Risk</span>
+          {% endif %}
+        </td>
+        <td>{{ (p.probability * 100)|round(1) }}%</td>
+        <td style="font-size:12px;color:#6B7280">{{ p.top_factors or '-' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align:center;color:var(--corp-ink-soft);padding:30px">No predictions yet. Train the model first.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

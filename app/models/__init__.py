@@ -315,6 +315,18 @@ class Message(db.Model):
     conversation = db.relationship("Conversation", backref="messages")
     sender = db.relationship("User", backref="sent_messages")
 
+class PredictionResult(db.Model):
+    __tablename__ = "predictions"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profiles.id"), nullable=False)
+    probability = db.Column(db.Float, default=0.0)
+    prediction = db.Column(db.Boolean, default=False)
+    model_version = db.Column(db.String(20), default="v1")
+    features_json = db.Column(db.Text)
+    top_factors = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    student = db.relationship("StudentProfile", backref="prediction")
+
 class Follow(db.Model):
     __tablename__ = "follows"
     id = db.Column(db.Integer, primary_key=True)

@@ -14,6 +14,8 @@ student_bp = Blueprint("student", __name__)
 @login_required
 def dashboard():
     from app.services.eri_engine import calculate_eri_trend, calculate_class_eri_trend, predict_next_eri
+    from app.services.ml_predictor import predict as ml_predict
+    from app.models import PredictionResult
 
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all() if profile else []
@@ -25,6 +27,7 @@ def dashboard():
     class_avg_trend = []
     predicted_next = 0
     attendance_timeline = []
+    ml_prediction = None
 
     if profile:
         if profile.school_class:
@@ -48,9 +51,17 @@ def dashboard():
         attendance_timeline = AttendanceRecord.query.filter_by(student_id=profile.id) \
             .order_by(AttendanceRecord.date.desc()).limit(30).all()
 
+        cached = PredictionResult.query.filter_by(student_id=profile.id).first()
+        if cached:
+            ml_prediction = {"probability": round(cached.probability * 100, 1), "prediction": cached.prediction, "top_factors": [f.strip() for f in cached.top_factors.split(",")] if cached.top_factors else []}
+        else:
+            result = ml_predict(profile)
+            if "error" not in result:
+                ml_prediction = result
+
     return render_template("student/dashboard.html", profile=profile, results=results, docs=docs,
         notifs=notifs, schedule=schedule, eri_trend=eri_trend, class_avg_trend=class_avg_trend,
-        predicted_next=predicted_next, attendance_timeline=attendance_timeline)
+        predicted_next=predicted_next, attendance_timeline=attendance_timeline, ml_prediction=ml_prediction)
 
 @student_bp.route("/results")
 @login_required

@@ -74,6 +74,43 @@
   </div>
 </div>
 
+<!-- ML PREDICTION CARD -->
+{% if ml_prediction %}
+<div class="corp-panel" style="margin-top:16px">
+  <div class="corp-panel-head">
+    <h3><i class="fas fa-brain" style="color:{{ '#17A589' if ml_prediction.prediction else '#B03A2E' }}"></i> AI REDI Readiness Prediction</h3>
+    <span class="tag">Logistic Regression</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 0">
+    <div style="position:relative;width:120px;height:120px">
+      <svg viewBox="0 0 36 36" style="width:120px;height:120px">
+        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E4E7EC" stroke-width="3"/>
+        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="{{ '#17A589' if ml_prediction.prediction else '#B03A2E' }}" stroke-width="3" stroke-dasharray="{{ ml_prediction.probability }}, 100"/>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+        <div style="font-size:28px;font-weight:700;color:{{ '#17A589' if ml_prediction.prediction else '#B03A2E' }}">{{ ml_prediction.probability }}%</div>
+        <div style="font-size:10px;color:#6B7280">{{ 'READY' if ml_prediction.prediction else 'AT RISK' }}</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-weight:600;font-size:16px;margin-bottom:4px">
+        {% if ml_prediction.prediction %}
+        <span style="color:#17A589">On track to graduate as REDI</span>
+        {% else %}
+        <span style="color:#B03A2E">Not on track — needs improvement</span>
+        {% endif %}
+      </div>
+      <div style="font-size:13px;color:#6B7280">Top factors influencing this prediction:</div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        {% for factor in ml_prediction.top_factors %}
+        <span class="corp-pill neutral">{{ factor }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="two-col">
   <!-- SEMESTER TREND vs CLASS AVERAGE -->
   <div class="corp-panel" style="grid-column:1/-1">
