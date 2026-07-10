@@ -1,20 +1,27 @@
 {% extends 'base.html' %}
 {% block sidebar %}
 <a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-<a href="/employer/candidates"><i class="fas fa-users"></i> Browse Candidates</a>
-<a href="/employer/search" class="active"><i class="fas fa-search"></i> Search</a>
+<a href="/employer/candidates" class="active"><i class="fas fa-users"></i> Candidates</a>
 <a href="/employer/chat"><i class="fas fa-comments"></i> Messages</a>
 {% endblock %}
-{% block page_title %}Search Results{% endblock %}
+{% block page_title %}Browse Candidates{% endblock %}
 {% block content %}
 <div class="card" style="background:linear-gradient(135deg,#1B4F72,#154360);border:none;margin-bottom:24px;padding:24px">
-  <h3 style="color:#fff;font-size:18px;border:none;padding:0;margin:0">Results: {{ students|length }} candidate(s) found</h3>
-  <form method="GET" action="/employer/search" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
-    <input type="text" name="q" placeholder="Name" value="{{ q or '' }}" style="flex:1;min-width:140px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
+  <h3 style="color:#fff;font-size:18px;border:none;padding:0;margin:0">
+    <i class="fas fa-users"></i> {{ students|length }} candidate(s) found
+  </h3>
+  <form method="GET" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+    <input type="number" name="eri_min" placeholder="Min ERI" value="{{ eri_min or '' }}" min="0" max="100" style="flex:0 0 100px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
+    <input type="text" name="skills" placeholder="Skills (comma-separated)" value="{{ skills or '' }}" style="flex:1;min-width:140px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
     <input type="text" name="program" placeholder="Program" value="{{ program or '' }}" style="flex:1;min-width:140px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
-    <input type="number" name="eri_min" placeholder="Min ERI" value="{{ eri_min or '' }}" style="flex:0 0 100px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
+    <input type="text" name="dept" placeholder="Department" value="{{ dept or '' }}" style="flex:1;min-width:120px;padding:8px 12px;border:none;border-radius:6px;font-size:13px">
+    <select name="availability" style="padding:8px 12px;border:none;border-radius:6px;font-size:13px">
+      <option value="">Any availability</option>
+      <option value="available_now" {% if availability == 'available_now' %}selected{% endif %}>Available Now</option>
+      <option value="available_next_semester" {% if availability == 'available_next_semester' %}selected{% endif %}>Next Semester</option>
+    </select>
     <button type="submit" class="btn" style="background:#17A589;color:#fff"><i class="fas fa-search"></i> Filter</button>
-    <a href="/employer/dashboard" class="btn" style="background:#fff;color:#1B4F72">New Search</a>
+    <a href="/employer/candidates" class="btn" style="background:#fff;color:#1B4F72">Clear</a>
   </form>
 </div>
 
@@ -29,7 +36,7 @@
         <div style="font-size:12px;color:var(--muted)">{{ s.user.department or '' }}</div>
       </div>
       <div style="text-align:center;flex-shrink:0">
-        <div style="font-family:var(--font-head);font-size:22px;color:#17A589;font-weight:700">{{ s.eri_score }}%</div>
+        <div style="font-family:var(--font-head);font-size:24px;color:#17A589;font-weight:700">{{ s.eri_score }}%</div>
         <div style="font-size:10px;color:var(--muted)">ERI</div>
       </div>
     </div>
@@ -40,6 +47,12 @@
       {% endfor %}
     </div>
     {% endif %}
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)">
+      <i class="fas fa-clock"></i>
+      {% if s.availability == 'available_now' %}<span style="color:#17A589;font-weight:600">Available Now</span>
+      {% elif s.availability == 'available_next_semester' %}Available Next Semester
+      {% else %}Not specified{% endif %}
+    </div>
     <div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
       <a href="/employer/student/{{ s.id }}" class="btn btn-sm btn-outline" style="flex:1"><i class="fas fa-user"></i> Profile</a>
       <a href="/employer/chat/{{ s.user.id }}" class="btn btn-sm btn-primary" style="flex:1"><i class="fas fa-comment"></i> Message</a>
@@ -48,7 +61,8 @@
   {% else %}
   <div class="card" style="text-align:center;padding:40px;grid-column:1/-1">
     <i class="fas fa-search" style="font-size:32px;color:var(--muted);margin-bottom:12px"></i>
-    <p style="color:var(--muted)">No candidates match your criteria. Try broadening your search.</p>
+    <p style="color:var(--muted)">No public candidates match your criteria. Students need to opt in to be discoverable.</p>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">Tip: Try broadening your filters or check back later.</p>
   </div>
   {% endfor %}
 </div>

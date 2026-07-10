@@ -1,12 +1,22 @@
-﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
+from functools import wraps
 from app import db
 from app.models import User, StudentProfile, Conversation, Message, Document
+
+def employer_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != "employer":
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 employer_bp = Blueprint("employer", __name__)
 
 @employer_bp.route("/dashboard", methods=["GET", "POST"])
 @login_required
+@employer_required
 def dashboard():
     if request.method == "POST":
         program = request.form.get("program", "").strip()
@@ -14,7 +24,7 @@ def dashboard():
         eri_min = request.form.get("eri_min", 0, type=int)
         dept = request.form.get("dept", "").strip()
 
-        query = StudentProfile.query.join(User)
+        query = StudentProfile.query.join(User).filter(StudentProfile.is_public == True)
         if program:
             query = query.filter(StudentProfile.program.ilike(f"%{program}%"))
         if dept:
@@ -29,9 +39,9 @@ def dashboard():
         return render_template("employer/results.html", students=students,
                                program=program, skills=skills, eri_min=eri_min, dept=dept)
 
-    total = StudentProfile.query.count()
-    top = StudentProfile.query.filter(StudentProfile.eri_score >= 80).count()
-    top_students = StudentProfile.query.order_by(StudentProfile.eri_score.desc()).limit(6).all()
+    total = StudentProfile.query.filter(StudentProfile.is_public == True).count()
+    top = StudentProfile.query.filter(StudentProfile.is_public == True, StudentProfile.eri_score >= 80).count()
+    top_students = StudentProfile.query.filter(StudentProfile.is_public == True).order_by(StudentProfile.eri_score.desc()).limit(6).all()
     unread = Message.query.filter_by(sender_id=User.id).join(Conversation).filter(
         Conversation.employer_id == current_user.id, Message.is_read == False
     ).count() if False else 0
@@ -43,11 +53,12 @@ def dashboard():
 
 @employer_bp.route("/search")
 @login_required
+@employer_required
 def search():
     q = request.args.get("q", "").strip()
     program = request.args.get("program", "").strip()
     eri_min = request.args.get("eri_min", 0, type=int)
-    query = StudentProfile.query.join(User)
+    query = StudentProfile.query.join(User).filter(StudentProfile.is_public == True)
     if q:
         query = query.filter(User.name.ilike(f"%{q}%"))
     if program:
@@ -58,15 +69,46 @@ def search():
     return render_template("employer/results.html", students=students,
                            q=q, program=program, eri_min=eri_min)
 
+@employer_bp.route("/candidates")
+@login_required
+@employer_required
+def candidates():
+    eri_min = request.args.get("eri_min", 0, type=int)
+    skills = request.args.get("skills", "").strip()
+    program = request.args.get("program", "").strip()
+    dept = request.args.get("dept", "").strip()
+    availability = request.args.get("availability", "").strip()
+
+    query = StudentProfile.query.join(User).filter(StudentProfile.is_public == True)
+    if eri_min > 0:
+        query = query.filter(StudentProfile.eri_score >= eri_min)
+    if program:
+        query = query.filter(StudentProfile.program.ilike(f"%{program}%"))
+    if dept:
+        query = query.filter(User.department.ilike(f"%{dept}%"))
+    if availability:
+        query = query.filter(StudentProfile.availability == availability)
+    if skills:
+        for sk in [s.strip() for s in skills.split(",")]:
+            query = query.filter(StudentProfile.skills.ilike(f"%{sk}%"))
+    students = query.order_by(StudentProfile.eri_score.desc()).all()
+    return render_template("employer/candidates.html", students=students,
+        eri_min=eri_min, skills=skills, program=program, dept=dept, availability=availability)
+
 @employer_bp.route("/student/<int:profile_id>")
 @login_required
+@employer_required
 def view_student(profile_id):
     p = StudentProfile.query.get_or_404(profile_id)
+    if not p.is_public:
+        flash("This profile is not currently public.", "warning")
+        return redirect(url_for("employer.candidates"))
     docs = Document.query.filter_by(student_id=p.id, is_verified=True).all()
     return render_template("employer/student_profile.html", p=p, docs=docs)
 
 @employer_bp.route("/chat")
 @login_required
+@employer_required
 def chat_list():
     convos = Conversation.query.filter_by(employer_id=current_user.id)\
         .order_by(Conversation.created_at.desc()).all()
@@ -74,6 +116,7 @@ def chat_list():
 
 @employer_bp.route("/chat/<int:student_id>")
 @login_required
+@employer_required
 def chat_with_student(student_id):
     student = User.query.get_or_404(student_id)
     if student.role != "student":

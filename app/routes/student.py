@@ -146,12 +146,19 @@ def profile():
         p.skills      = request.form.get("skills","").strip()
         p.linkedin_url= request.form.get("linkedin_url","").strip()
         p.filiere     = request.form.get("filiere","").strip()
+        p.availability = request.form.get("availability","available_now")
+        p.is_public   = request.form.get("is_public") == "on"
         current_user.department = request.form.get("department","").strip()
         photo = request.files.get("photo")
         if photo and allowed_file(photo.filename):
             filename = secure_filename(f"{current_user.matricule}_{photo.filename}")
             photo.save(os.path.join("app","static","uploads","profiles", filename))
             p.photo_filename = filename
+        cv = request.files.get("cv_file")
+        if cv and cv.filename and cv.filename.lower().endswith(".pdf"):
+            cv_filename = secure_filename(f"cv_{current_user.matricule}.pdf")
+            cv.save(os.path.join("app","static","uploads","profiles", cv_filename))
+            p.cv_file = cv_filename
         db.session.commit()
         flash("Profil mis a jour avec succes !", "success")
         return redirect(url_for("student.profile"))

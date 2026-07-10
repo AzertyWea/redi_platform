@@ -109,6 +109,35 @@
           value="{{ p.linkedin_url or '' }}">
       </div>
 
+      <div class="form-group">
+        <label class="form-label">Availability</label>
+        <select name="availability" class="form-control">
+          <option value="available_now" {% if p.availability == 'available_now' %}selected{% endif %}>Available Now</option>
+          <option value="available_next_semester" {% if p.availability == 'available_next_semester' %}selected{% endif %}>Available Next Semester</option>
+          <option value="not_available" {% if p.availability == 'not_available' %}selected{% endif %}>Not Available</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Upload CV (PDF)</label>
+        <input type="file" name="cv_file" accept=".pdf" class="form-control">
+        {% if p.cv_file %}<span class="form-hint">Current: {{ p.cv_file }} (<a href="/static/uploads/profiles/{{ p.cv_file }}" target="_blank">view</a>)</span>{% endif %}
+      </div>
+
+      <div class="form-group" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" name="is_public" id="is_public" {% if p.is_public %}checked{% endif %} style="width:18px;height:18px">
+        <label for="is_public" style="font-weight:600;font-size:13px;cursor:pointer">Make my profile visible to employers</label>
+      </div>
+      {% if p.is_public %}
+      <div class="alert alert-success" style="font-size:12px;padding:8px 12px;margin-bottom:16px">
+        <i class="fas fa-eye"></i> Your profile is public and searchable by employers.
+      </div>
+      {% else %}
+      <div class="alert alert-warning" style="font-size:12px;padding:8px 12px;margin-bottom:16px">
+        <i class="fas fa-eye-slash"></i> Your profile is hidden from employers. Toggle the box above to be discoverable.
+      </div>
+      {% endif %}
+
       <button type="submit" class="btn btn-accent w-full btn-loading">
         <i class="fas fa-save"></i> Save profile
       </button>
