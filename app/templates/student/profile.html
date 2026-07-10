@@ -1,19 +1,19 @@
 ﻿{% extends "base.html" %}
 {% block sidebar %}
-<a href="/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-<a href="/student/results"><i class="fas fa-chart-bar"></i> Results</a>
-<a href="/student/documents"><i class="fas fa-folder"></i> Documents</a>
-<a href="/student/coach"><i class="fas fa-robot"></i> AI Coach</a>
-<a href="/student/career-data"><i class="fas fa-briefcase"></i> Career Data</a>
-<a href="/student/profile" class="active"><i class="fas fa-user-edit"></i> My Profile</a>
-<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+<div class="menu-label">{{ _('navigation') }}</div>
+<a href="/student/dashboard"><i class="fas fa-home"></i> {{ _('dashboard') }}</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> {{ _('results') }}</a>
+<a href="/student/documents"><i class="fas fa-file-alt"></i> {{ _('documents') }}</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> {{ _('career_passport') }}</a>
+<div class="sidebar-divider"></div>
+<div class="menu-label">{{ _('tools') }}</div>
+<a href="/student/coach"><i class="fas fa-robot"></i> {{ _('career_coach') }}</a>
+<a href="/student/messages"><i class="fas fa-comments"></i> {{ _('messages') }}</a>
+<a href="/student/profile" class="active"><i class="fas fa-user-edit"></i> {{ _('profile') }}</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> {{ _('download') }} PDF</a>
 {% endblock %}
-{% block page_title %}My Profile{% endblock %}
+{% block page_title %}{{ _('profile') }}{% endblock %}
 {% block content %}
-<div class="page-header">
-  <h1><i class="fas fa-user-edit"></i> My Profile</h1>
-  <p>Complete your profile to be visible to employers</p>
-</div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for cat, msg in messages %}
@@ -21,57 +21,50 @@
   {% endfor %}
 {% endwith %}
 
-<div class="two-col">
-  <div class="card" style="text-align:center;padding:32px 20px">
-    {% if p and p.photo_filename %}
-      <img src="/static/uploads/profiles/{{ p.photo_filename }}"
-           style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #7B0D1E;margin-bottom:16px">
-    {% else %}
-      <div style="width:110px;height:110px;border-radius:50%;background:#7B0D1E;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#fff;margin:0 auto 16px">
-        {{ current_user.name[0] }}
-      </div>
-    {% endif %}
-    <div style="font-weight:700;font-size:1.1rem;color:#7B0D1E">{{ current_user.name }}</div>
-    <div style="color:#A52535;font-size:0.85rem;margin:4px 0">{{ current_user.matricule }}</div>
-    <div style="color:#8C6E6E;font-size:0.8rem">{{ p.filiere or 'Program not set' }}</div>
-    <div style="color:#8C6E6E;font-size:0.8rem">{{ current_user.department or 'School not set' }}</div>
-
-    <div style="margin:16px 0;padding:12px;background:#F8F5F5;border-radius:8px">
-      <div style="font-size:0.75rem;color:#8C6E6E">ERI Score</div>
-      <div style="font-size:2rem;font-weight:700;color:#7B0D1E">{{ p.eri_score if p else 0 }}%</div>
+<div class="profile-card">
+  <div class="profile-cover"></div>
+  <div class="profile-header">
+    <div class="profile-photo">
+      {% if p and p.photo_filename %}
+      <img src="{{ url_for('static', filename='uploads/profiles/' + p.photo_filename) }}" alt="{{ current_user.name }}">
+      {% else %}
+      {{ current_user.name[0] }}
+      {% endif %}
     </div>
-
-    {% if p and p.linkedin_url %}
-    <a href="{{ p.linkedin_url }}" target="_blank" class="btn btn-primary btn-sm" style="width:100%">
-      <i class="fab fa-linkedin"></i> View LinkedIn
-    </a>
-    {% endif %}
-
-    {% if p and p.skills %}
-    <div style="margin-top:16px;text-align:left">
-      <div style="font-size:0.75rem;color:#8C6E6E;margin-bottom:8px;font-weight:600">Skills</div>
-      {% for skill in p.skills.split(',') %}
-        <span class="badge badge-primary" style="margin:3px">{{ skill.strip() }}</span>
-      {% endfor %}
+    <div class="profile-name">{{ current_user.name }}</div>
+    <div class="profile-headline">{{ p.filiere or _('program') }}{% if current_user.department %} &middot; {{ current_user.department }}{% endif %}</div>
+    <div class="profile-meta">
+      <span><i class="fas fa-id-card"></i> {{ current_user.matricule }}</span>
+      <span><i class="fas fa-graduation-cap"></i> {{ _('semester') }} {{ p.current_semester or 1 }}</span>
+      {% if p and p.is_public %}
+      <span><i class="fas fa-eye"></i> {{ _('visible_to_employers') }}</span>
+      {% endif %}
+    </div>
+    {% if p and p.eri_score is defined %}
+    <div style="margin-top:16px;max-width:400px">
+      <div class="corp-trust-label"><span>{{ _('employability_readiness') }}</span><span class="score">{{ p.eri_score }}%</span></div>
+      <div class="corp-trust-track"><div class="corp-trust-fill" style="width:{{ p.eri_score }}%"></div></div>
     </div>
     {% endif %}
   </div>
+</div>
 
+<div class="grid-2-1">
   <div class="card">
-    <h3><i class="fas fa-edit"></i> Edit my profile</h3>
+    <h3><i class="fas fa-edit"></i> {{ _('edit_profile') }}</h3>
     <form method="POST" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div class="form-group">
-        <label class="form-label">Profile photo</label>
+        <label class="form-label">{{ _('profile_photo') }}</label>
         <input type="file" name="photo" id="photo" accept="image/*" class="form-control">
-        <span class="form-hint">JPG, PNG — max 2MB</span>
+        <span class="form-hint">JPG, PNG &mdash; max 2MB</span>
       </div>
 
       <div class="form-group">
-        <label class="form-label">School / Department</label>
-        <select name="department" id="dept-select" class="form-control" onchange="loadPrograms(this.value)">
-          <option value="">-- Select school --</option>
+        <label class="form-label">{{ _('department') }}</label>
+        <select name="department" id="dept-select" class="form-control" onchange="loadPrograms(this.value, 'filiere-select')">
+          <option value="">-- {{ _('select_school') }} --</option>
           {% for d in departments %}
           <option value="{{ d.name }}" {% if current_user.department == d.name %}selected{% endif %}>{{ d.name }}</option>
           {% endfor %}
@@ -79,69 +72,98 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Program / Field of study</label>
+        <label class="form-label">{{ _('program') }}</label>
         <select name="filiere" id="filiere-select" class="form-control">
           {% if p and p.filiere %}
             <option value="{{ p.filiere }}" selected>{{ p.filiere }}</option>
           {% else %}
-            <option value="">-- Select school above first --</option>
+            <option value="">-- {{ _('select_school_first') }} --</option>
           {% endif %}
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Bio / Description</label>
+        <label class="form-label">{{ _('bio') }}</label>
         <textarea name="bio" class="form-control" rows="4"
           placeholder="Tell us about yourself and your career goals...">{{ p.bio or '' }}</textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Skills <span style="color:#8C6E6E;font-weight:400">(comma separated)</span></label>
+        <label class="form-label">{{ _('skills') }} <span class="text-muted text-sm">(comma separated)</span></label>
         <input name="skills" class="form-control"
           placeholder="ex: Python, Excel, Communication, Java"
           value="{{ p.skills or '' }}">
       </div>
 
       <div class="form-group">
-        <label class="form-label"><i class="fab fa-linkedin" style="color:#0077B5"></i> LinkedIn link</label>
+        <label class="form-label"><i class="fab fa-linkedin" style="color:#0077B5"></i> LinkedIn</label>
         <input name="linkedin_url" class="form-control"
           placeholder="https://linkedin.com/in/your-profile"
           value="{{ p.linkedin_url or '' }}">
       </div>
 
       <div class="form-group">
-        <label class="form-label">Availability</label>
+        <label class="form-label">{{ _('availability') }}</label>
         <select name="availability" class="form-control">
-          <option value="available_now" {% if p.availability == 'available_now' %}selected{% endif %}>Available Now</option>
-          <option value="available_next_semester" {% if p.availability == 'available_next_semester' %}selected{% endif %}>Available Next Semester</option>
-          <option value="not_available" {% if p.availability == 'not_available' %}selected{% endif %}>Not Available</option>
+          <option value="available_now" {% if p.availability == 'available_now' %}selected{% endif %}>{{ _('available_now') }}</option>
+          <option value="available_next_semester" {% if p.availability == 'available_next_semester' %}selected{% endif %}>{{ _('available_next_semester') }}</option>
+          <option value="not_available" {% if p.availability == 'not_available' %}selected{% endif %}>{{ _('not_available') }}</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Upload CV (PDF)</label>
+        <label class="form-label">{{ _('upload_cv') }}</label>
         <input type="file" name="cv_file" accept=".pdf" class="form-control">
-        {% if p.cv_file %}<span class="form-hint">Current: {{ p.cv_file }} (<a href="/static/uploads/profiles/{{ p.cv_file }}" target="_blank">view</a>)</span>{% endif %}
+        {% if p.cv_file %}<span class="form-hint">{{ _('current') }}: {{ p.cv_file }} (<a href="{{ url_for('static', filename='uploads/profiles/' + p.cv_file) }}" target="_blank">{{ _('view') }}</a>)</span>{% endif %}
       </div>
 
       <div class="form-group" style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" name="is_public" id="is_public" {% if p.is_public %}checked{% endif %} style="width:18px;height:18px">
-        <label for="is_public" style="font-weight:600;font-size:13px;cursor:pointer">Make my profile visible to employers</label>
+        <input type="checkbox" name="is_public" id="is_public" {% if p.is_public %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--primary)">
+        <label for="is_public" class="fw-600" style="font-size:13px;cursor:pointer">{{ _('make_public') }}</label>
       </div>
       {% if p.is_public %}
       <div class="alert alert-success" style="font-size:12px;padding:8px 12px;margin-bottom:16px">
-        <i class="fas fa-eye"></i> Your profile is public and searchable by employers.
+        <i class="fas fa-eye"></i> {{ _('visible_to_employers') }}
       </div>
       {% else %}
       <div class="alert alert-warning" style="font-size:12px;padding:8px 12px;margin-bottom:16px">
-        <i class="fas fa-eye-slash"></i> Your profile is hidden from employers. Toggle the box above to be discoverable.
+        <i class="fas fa-eye-slash"></i> {{ _('hidden_from_employers') }}
       </div>
       {% endif %}
 
-      <button type="submit" class="btn btn-accent w-full btn-loading">
-        <i class="fas fa-save"></i> Save profile
+      <button type="submit" class="btn btn-primary w-full btn-loading">
+        <i class="fas fa-save"></i> {{ _('save') }}
       </button>
     </form>
+  </div>
+
+  <div>
+    <div class="card" style="text-align:center;padding:24px">
+      <div class="eri-ring-wrap">
+        <div class="eri-ring">
+          <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"></circle><circle class="fill score-circle" data-score="{{ p.eri_score if p else 0 }}" cx="50" cy="50" r="42"></circle></svg>
+          <div class="score-text"><div class="num">{{ p.eri_score if p else 0 }}</div><div class="lbl">/100</div></div>
+        </div>
+      </div>
+      <div class="text-sm text-muted" style="margin-top:8px">{{ _('eri_score') }}</div>
+    </div>
+
+    {% if p and p.linkedin_url %}
+    <div class="card" style="text-align:center">
+      <a href="{{ p.linkedin_url }}" target="_blank" class="btn btn-outline btn-sm w-full"><i class="fab fa-linkedin"></i> LinkedIn</a>
+    </div>
+    {% endif %}
+
+    {% if p and p.skills %}
+    <div class="card">
+      <h3><i class="fas fa-tools"></i> {{ _('skills') }}</h3>
+      <div>
+        {% for skill in p.skills.split(',') %}
+          <span class="badge badge-primary" style="margin:3px;padding:5px 12px">{{ skill.strip() }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 

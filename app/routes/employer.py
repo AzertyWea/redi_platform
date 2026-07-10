@@ -2,7 +2,7 @@
 from flask_login import login_required, current_user
 from functools import wraps
 from app import db
-from app.models import User, StudentProfile, Conversation, Message, Document
+from app.models import User, StudentProfile, Conversation, Message, Document, Follow
 
 def employer_required(f):
     @wraps(f)
@@ -106,7 +106,12 @@ def view_student(profile_id):
         flash("This profile is not currently public.", "warning")
         return redirect(url_for("employer.candidates"))
     docs = Document.query.filter_by(student_id=p.id, is_verified=True).all()
-    return render_template("employer/student_profile.html", p=p, docs=docs)
+    is_following = Follow.query.filter_by(
+        follower_id=current_user.id, followed_id=p.user.id
+    ).first() is not None
+    followers_count = Follow.query.filter_by(followed_id=p.user.id).count()
+    return render_template("employer/student_profile.html", p=p, docs=docs,
+                           is_following=is_following, followers_count=followers_count)
 
 @employer_bp.route("/chat")
 @login_required
@@ -174,3 +179,25 @@ def send_message(conversation_id):
     )
     db.session.commit()
     return jsonify({"success": True, "message_id": msg.id})
+
+@employer_bp.route("/follow/<int:student_id>", methods=["POST"])
+@login_required
+@employer_required
+def follow_student(student_id):
+    student = User.query.get_or_404(student_id)
+    if student.role != "student":
+        return jsonify({"error": "Invalid user"}), 400
+    existing = Follow.query.filter_by(follower_id=current_user.id, followed_id=student_id).first()
+    if not existing:
+        f = Follow(follower_id=current_user.id, followed_id=student_id)
+        db.session.add(f)
+        db.session.commit()
+    return jsonify({"status": "following"})
+
+@employer_bp.route("/unfollow/<int:student_id>", methods=["POST"])
+@login_required
+@employer_required
+def unfollow_student(student_id):
+    Follow.query.filter_by(follower_id=current_user.id, followed_id=student_id).delete()
+    db.session.commit()
+    return jsonify({"status": "unfollowed"})

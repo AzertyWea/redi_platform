@@ -1,85 +1,166 @@
 {% extends 'base.html' %}
 {% block sidebar %}
-<a href="/employer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-<a href="/employer/candidates"><i class="fas fa-users"></i> Browse Candidates</a>
-<a href="/employer/chat"><i class="fas fa-comments"></i> Messages</a>
+<div class="menu-label">{{ _('navigation') }}</div>
+<a href="/employer/dashboard"><i class="fas fa-home"></i> {{ _('dashboard') }}</a>
+<a href="/employer/search"><i class="fas fa-search"></i> {{ _('talent_search') }}</a>
+<a href="/employer/candidates"><i class="fas fa-users"></i> {{ _('candidates') }}</a>
+<a href="/employer/chat"><i class="fas fa-comments"></i> {{ _('messages') }}</a>
 {% endblock %}
 {% block page_title %}{{ p.user.name }}{% endblock %}
 {% block content %}
-<div class="card">
-  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-    <div style="width:72px;height:72px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:26px;font-weight:700;flex-shrink:0">{{ p.user.name[0] }}</div>
-    <div style="flex:1;min-width:200px">
-      <h3 style="font-size:20px;border:none;padding:0;margin:0">{{ p.user.name }}</h3>
-      <p style="color:var(--muted);font-size:13px;margin-top:4px">{{ p.program }} &middot; {{ p.user.department or '' }}</p>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <a href="/employer/chat/{{ p.user.id }}" class="btn btn-primary btn-sm"><i class="fas fa-comment"></i> Message</a>
+<div class="profile-card">
+  <div class="profile-cover"></div>
+  <div class="profile-header">
+    <div class="profile-photo">
+      {% if p.photo_filename %}
+      <img src="{{ url_for('static', filename='uploads/' + p.photo_filename) }}" alt="{{ p.user.name }}">
+      {% else %}
+      {{ p.user.name[0] }}
+      {% endif %}
+    </div>
+    <div class="profile-name">{{ p.user.name }}</div>
+    <div class="profile-headline">{{ p.program or '' }}{% if p.user.department %} &middot; {{ p.user.department }}{% endif %}</div>
+    <div class="profile-meta">
+      <span><i class="fas fa-map-pin"></i> {{ p.user.email }}</span>
+      <span><i class="fas fa-graduation-cap"></i> Semester {{ p.current_semester or '-' }}</span>
+      {% if followers_count is defined %}
+      <span><i class="fas fa-users"></i> {{ followers_count }} followers</span>
+      {% endif %}
+    </div>
+    <div class="profile-actions">
+      <a href="/employer/chat/{{ p.user.id }}" class="btn btn-primary"><i class="fas fa-comment"></i> {{ _('send_message') }}</a>
+      {% if is_following %}
+      <button class="btn btn-outline" onclick="toggleFollow({{ p.user.id }})" id="follow-btn"><i class="fas fa-check"></i> {{ _('following') }}</button>
+      {% else %}
+      <button class="btn btn-primary" onclick="toggleFollow({{ p.user.id }})" id="follow-btn"><i class="fas fa-plus"></i> {{ _('connect') }}</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-chart-line"></i> {{ _('eri_score') }}</h3></div>
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div class="eri-ring-wrap">
+        <div class="eri-ring">
+          <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"></circle><circle class="fill score-circle" data-score="{{ p.eri_score }}" cx="50" cy="50" r="42"></circle></svg>
+          <div class="score-text"><div class="num">{{ p.eri_score }}</div><div class="lbl">/100</div></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div class="corp-trust-label"><span>{{ _('employability_readiness') }}</span><span class="score">{{ p.eri_score }}%</span></div>
+        <div class="corp-trust-track"><div class="corp-trust-fill" style="width:{{ p.eri_score }}%"></div></div>
+        <div class="corp-trust-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
       </div>
     </div>
-    <div style="text-align:center;padding:12px 24px;background:var(--bg);border-radius:12px">
-      <div style="font-family:var(--font-head);font-size:32px;color:#17A589;font-weight:700">{{ p.eri_score }}%</div>
-      <div style="font-size:11px;color:var(--muted)">ERI Score</div>
-    </div>
   </div>
-</div>
 
-<div class="two-col">
-  <div class="card">
-    <h3><i class="fas fa-info-circle"></i> About</h3>
-    <table class="table" style="min-width:unset">
-      <tr><td style="width:120px;font-weight:600">Email</td><td>{{ p.user.email }}</td></tr>
-      <tr><td style="font-weight:600">Program</td><td>{{ p.program or '-' }}</td></tr>
-      <tr><td style="font-weight:600">Department</td><td>{{ p.user.department or '-' }}</td></tr>
-      <tr><td style="font-weight:600">Semester</td><td>{{ p.current_semester or '-' }}</td></tr>
-      <tr><td style="font-weight:600">Bio</td><td>{{ p.bio or 'No bio provided.' }}</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h3><i class="fas fa-tools"></i> Skills</h3>
-    {% if p.skills %}
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      {% for sk in p.skills.split(',') %}
-      <span style="padding:4px 12px;background:var(--bg);border-radius:20px;font-size:12px;color:var(--text)">{{ sk.strip() }}</span>
-      {% endfor %}
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-info-circle"></i> {{ _('about') }}</h3></div>
+    <p>{{ p.bio or _('no_bio') }}</p>
+    {% if p.linkedin_url %}
+    <div style="margin-top:10px">
+      <a href="{{ p.linkedin_url }}" target="_blank" class="btn btn-sm btn-outline"><i class="fab fa-linkedin"></i> LinkedIn</a>
     </div>
-    {% else %}
-    <p style="color:var(--muted);font-size:13px">No skills listed.</p>
     {% endif %}
-    <h3 style="margin-top:20px"><i class="fas fa-briefcase"></i> Internships</h3>
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-tools"></i> {{ _('skills') }}</h3><a href="javascript:;" class="text-sm text-muted"></a></div>
+    <div>
+      {% if p.skills %}
+      {% for sk in p.skills.split(',') %}
+      <span class="profile-skill">{{ sk.strip() }}</span>
+      {% endfor %}
+      {% else %}
+      <p class="text-muted text-sm">{{ _('no_skills') }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-briefcase"></i> {{ _('internships') }}</h3></div>
     {% for i in p.internships %}
-    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="font-weight:600;font-size:13px">{{ i.role_title }} at {{ i.company_name }}</div>
-      <div style="font-size:12px;color:var(--muted)">{{ i.start_date.strftime('%b %Y') if i.start_date }} - {{ i.end_date.strftime('%b %Y') if i.end_date }}</div>
+    <div class="profile-exp-item">
+      <div class="profile-exp-icon"><i class="fas fa-building"></i></div>
+      <div class="profile-exp-body">
+        <h4>{{ i.role_title }}</h4>
+        <div class="sub">{{ i.company_name }} &middot; {{ i.start_date.strftime('%b %Y') if i.start_date }} - {{ i.end_date.strftime('%b %Y') if i.end_date }}</div>
+        {% if i.description %}<div class="desc">{{ i.description }}</div>{% endif %}
+      </div>
     </div>
     {% else %}
-    <p style="color:var(--muted);font-size:13px">No internships recorded.</p>
+    <p class="text-muted text-sm">{{ _('no_internships') }}</p>
+    {% endfor %}
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-certificate"></i> {{ _('certifications') }}</h3></div>
+    {% for c in p.certifications %}
+    <div class="profile-exp-item">
+      <div class="profile-exp-icon"><i class="fas fa-award"></i></div>
+      <div class="profile-exp-body">
+        <h4>{{ c.title }}</h4>
+        <div class="sub">{{ c.issuer }} &middot; {{ c.date_obtained.strftime('%b %Y') if c.date_obtained }}</div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-sm">{{ _('no_certifications') }}</p>
+    {% endfor %}
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-code-branch"></i> {{ _('projects') }}</h3></div>
+    {% for pr in p.projects %}
+    <div class="profile-exp-item">
+      <div class="profile-exp-icon"><i class="fas fa-folder-open"></i></div>
+      <div class="profile-exp-body">
+        <h4>{{ pr.title }}</h4>
+        {% if pr.technologies %}<div class="sub">{{ pr.technologies }}</div>{% endif %}
+        {% if pr.description %}<div class="desc">{{ pr.description }}</div>{% endif %}
+        {% if pr.project_url %}<a href="{{ pr.project_url }}" target="_blank" class="text-sm" style="color:var(--primary);margin-top:4px;display:inline-block"><i class="fas fa-external-link-alt"></i> {{ _('view') }}</a>{% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-sm">{{ _('no_projects') }}</p>
+    {% endfor %}
+  </div>
+
+  <div class="profile-section">
+    <div class="section-title"><h3><i class="fas fa-file-alt"></i> {{ _('documents') }}</h3></div>
+    {% for d in docs %}
+    <div class="profile-exp-item">
+      <div class="profile-exp-icon"><i class="fas fa-file-pdf" style="color:var(--toast-error)"></i></div>
+      <div class="profile-exp-body">
+        <h4>{{ d.doc_type }}</h4>
+        <div class="sub">{{ d.filename }} <span class="badge badge-success" style="margin-left:8px">{{ _('verified') }}</span></div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-sm">{{ _('no_documents') }}</p>
     {% endfor %}
   </div>
 </div>
+{% endblock %}
 
-<div class="card">
-  <h3><i class="fas fa-file"></i> Verified Documents</h3>
-  <table class="table">
-    <thead><tr><th>Type</th><th>Filename</th><th>Verified</th></tr></thead>
-    <tbody>
-      {% for d in docs %}
-      <tr><td>{{ d.doc_type }}</td><td>{{ d.filename }}</td><td><span class="badge badge-success">Verified</span></td></tr>
-      {% else %}
-      <tr><td colspan="3" style="text-align:center;color:var(--muted)">No verified documents yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h3><i class="fas fa-certificate"></i> Certifications</h3>
-  {% for c in p.certifications %}
-  <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-    <div style="font-weight:600;font-size:13px">{{ c.title }}</div>
-    <div style="font-size:12px;color:var(--muted)">{{ c.issuer }} &middot; {{ c.date_obtained.strftime('%b %Y') if c.date_obtained }}</div>
-  </div>
-  {% else %}
-  <p style="color:var(--muted);font-size:13px">No certifications recorded.</p>
-  {% endfor %}
-</div>
+{% block scripts %}
+<script>
+function toggleFollow(studentId) {
+  var btn = document.getElementById('follow-btn');
+  var isFollowing = btn.classList.contains('btn-outline');
+  var url = isFollowing ? '/employer/unfollow/' + studentId : '/employer/follow/' + studentId;
+  fetch(url, { method: 'POST', headers: { 'X-CSRFToken': document.querySelector('[name=csrf_token]').value } })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.status === 'following') {
+        btn.innerHTML = '<i class="fas fa-check"></i> Following';
+        btn.className = 'btn btn-outline';
+        showToast('Connected with student', 'success');
+      } else {
+        btn.innerHTML = '<i class="fas fa-plus"></i> Connect';
+        btn.className = 'btn btn-primary';
+        showToast('Disconnected', 'info');
+      }
+    });
+}
+</script>
 {% endblock %}

@@ -1,10 +1,11 @@
 ﻿{% extends 'base.html' %}
 {% block sidebar %}
-<a href="/teacher/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
-<a href="/teacher/attendance"><i class="fas fa-clipboard-check"></i> Take Attendance</a>
-<a href="/teacher/assignments"><i class="fas fa-file-pen"></i> Assignments</a>
-<a href="/teacher/quizzes"><i class="fas fa-circle-question"></i> Quizzes</a>
-<a href="/teacher/observations"><i class="fas fa-comment-dots"></i> Observations</a>
+<div class="menu-label">{{ _('navigation') }}</div>
+<a href="/teacher/dashboard" class="active"><i class="fas fa-home"></i> {{ _('dashboard') }}</a>
+<a href="/teacher/attendance"><i class="fas fa-clipboard-check"></i> {{ _('attendance') }}</a>
+<a href="/teacher/assignments"><i class="fas fa-file-pen"></i> {{ _('assignments') }}</a>
+<a href="/teacher/quizzes"><i class="fas fa-circle-question"></i> {{ _('quizzes') }}</a>
+<a href="/teacher/observations"><i class="fas fa-comment-dots"></i> {{ _('observations') }}</a>
 {% endblock %}
 {% block page_title %}Teacher Dashboard{% endblock %}
 {% block content %}

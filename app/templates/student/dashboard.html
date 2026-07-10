@@ -1,13 +1,16 @@
 ﻿{% extends 'base.html' %}
 {% block sidebar %}
-<a href="/student/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
-<a href="/student/results"><i class="fas fa-chart-bar"></i> My Results</a>
-<a href="/student/documents"><i class="fas fa-file-alt"></i> Documents</a>
-<a href="/student/coach"><i class="fas fa-robot"></i> AI Coach</a>
-<a href="/student/career-data"><i class="fas fa-briefcase"></i> Career Data</a>
-<a href="/student/messages"><i class="fas fa-comments"></i> Messages</a>
-<a href="/student/profile"><i class="fas fa-user-edit"></i> My Profile</a>
-<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> PDF Report</a>
+<div class="menu-label">{{ _('navigation') }}</div>
+<a href="/student/dashboard" class="active"><i class="fas fa-home"></i> {{ _('dashboard') }}</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> {{ _('results') }}</a>
+<a href="/student/documents"><i class="fas fa-file-alt"></i> {{ _('documents') }}</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> {{ _('career_passport') }}</a>
+<div class="sidebar-divider"></div>
+<div class="menu-label">{{ _('tools') }}</div>
+<a href="/student/coach"><i class="fas fa-robot"></i> {{ _('career_coach') }}</a>
+<a href="/student/messages"><i class="fas fa-comments"></i> {{ _('messages') }}</a>
+<a href="/student/profile"><i class="fas fa-user-edit"></i> {{ _('profile') }}</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> {{ _('download') }} PDF</a>
 {% endblock %}
 {% block page_title %}Student Dashboard{% endblock %}
 {% block content %}

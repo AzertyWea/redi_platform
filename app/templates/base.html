@@ -1,59 +1,71 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang or 'en' }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REDI Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<title>{% block page_title %}REDI Platform{% endblock %}</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="REDI">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="/static/css/redi.css?v=3" rel="stylesheet">
+<link href="/static/css/redi.css?v=4" rel="stylesheet">
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-<script src="/static/js/redi.js" defer></script>
+<script src="/static/js/redi.js?v=2" defer></script>
 </head>
 <body>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-logo">
+    {% set home_link = url_for('auth.welcome') %}
     {% if current_user.is_authenticated %}
-      {% if current_user.role == 'student' %}
-        <a href="{{ url_for('student.dashboard') }}" style="text-decoration:none;color:inherit;display:block">
-      {% elif current_user.role == 'teacher' %}
-        <a href="{{ url_for('teacher.dashboard') }}" style="text-decoration:none;color:inherit;display:block">
-      {% elif current_user.role == 'admin' %}
-        <a href="{{ url_for('admin.dashboard') }}" style="text-decoration:none;color:inherit;display:block">
-      {% elif current_user.role == 'employer' %}
-        <a href="{{ url_for('employer.dashboard') }}" style="text-decoration:none;color:inherit;display:block">
-      {% else %}
-        <a href="{{ url_for('auth.welcome') }}" style="text-decoration:none;color:inherit;display:block">
-      {% endif %}
-    {% else %}
-      <a href="{{ url_for('auth.welcome') }}" style="text-decoration:none;color:inherit;display:block">
+      {% set role = current_user.role %}
+      {% set home_link = url_for(role + '.dashboard') if role in ['student','teacher','admin','employer'] else url_for('auth.welcome') %}
     {% endif %}
-      <h2><i class="fas fa-graduation-cap"></i> REDI</h2>
-      <span>Employability Intelligence</span>
+    <a href="{{ home_link }}">
+      <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div class="logo-text">
+        <h2>{{ _('platform_name') }}</h2>
+        <span>{{ _('career_passport') }}</span>
+      </div>
     </a>
   </div>
   <div class="sidebar-menu">
     {% block sidebar %}{% endblock %}
-    <a href="/logout" style="margin-top:auto"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="sidebar-divider"></div>
+    <a href="/logout"><i class="fas fa-sign-out-alt"></i> {{ _('logout') }}</a>
   </div>
 </div>
 <div class="main">
   <div class="topnav">
-    <div style="display:flex;align-items:center;gap:12px">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0">
       <button id="sidebar-toggle" style="background:none;border:none;font-size:20px;color:var(--primary);cursor:pointer;padding:4px">
         <i class="fas fa-bars"></i>
       </button>
-      <h1>{% block page_title %}REDI Platform{% endblock %}</h1>
+      <h1>{% block page_title %}{{ _('platform_name') }}{% endblock %}</h1>
     </div>
-    <div class="user-info">
+    <div class="topnav-actions">
+      <div class="language-switcher">
+        <button onclick="setLang('en')" class="{% if lang == 'en' %}active{% endif %}" title="English">EN</button>
+        <button onclick="setLang('fr')" class="{% if lang == 'fr' %}active{% endif %}" title="Fran\u00e7ais">FR</button>
+      </div>
       {% if current_user.is_authenticated %}
-      <a href="/notifications" class="notif-bell" title="Notifications">
+      <a href="/notifications" class="notif-bell" title="{{ _('notifications') }}">
         <i class="fas fa-bell"></i>
         <span class="notif-badge" id="notif-badge" style="display:none">0</span>
       </a>
       {% endif %}
-      <div class="avatar">{{ current_user.name[0] }}</div>
-      <span>{{ current_user.name }}</span>
+      {% if current_user.is_authenticated %}
+      <div class="user-info">
+        <a href="{% if current_user.role == 'student' %}{{ url_for('student.profile') }}{% elif current_user.role == 'employer' %}#{% else %}#{% endif %}" class="avatar" title="{{ _('profile') }}">
+          {% if current_user.role == 'student' and current_user.profile and current_user.profile.photo_filename %}
+          <img src="{{ url_for('static', filename='uploads/' + current_user.profile.photo_filename) }}" alt="{{ current_user.name }}">
+          {% else %}
+          {{ current_user.name[0] }}
+          {% endif %}
+        </a>
+        <span class="user-name">{{ current_user.name.split()[0] }}</span>
+      </div>
+      {% endif %}
     </div>
   </div>
   <div class="content">
@@ -67,7 +79,7 @@
 </div>
 <div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99"></div>
 
-<button onclick="openAiUpload()" title="AI Document Analysis" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#7B0D1E;color:#fff;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(123,13,30,0.35);z-index:300;transition:all .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+<button onclick="openAiUpload()" title="AI Document Analysis" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(123,13,30,0.35);z-index:300;transition:all .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
   <i class="fas fa-robot"></i>
 </button>
 
@@ -75,5 +87,11 @@
 <div id="toast-container"></div>
 {% include 'ai_upload_modal.html' %}
 <script src="/static/js/notifications.js"></script>
+<script>
+function setLang(lang) {
+  fetch('/set-language/' + lang, { method: 'POST', headers: { 'X-CSRFToken': document.querySelector('[name=csrf_token]').value } })
+    .then(function(){ location.reload(); });
+}
+</script>
 </body>
 </html>

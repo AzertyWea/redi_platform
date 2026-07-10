@@ -315,6 +315,16 @@ class Message(db.Model):
     conversation = db.relationship("Conversation", backref="messages")
     sender = db.relationship("User", backref="sent_messages")
 
+class Follow(db.Model):
+    __tablename__ = "follows"
+    id = db.Column(db.Integer, primary_key=True)
+    follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    followed_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    follower = db.relationship("User", foreign_keys=[follower_id], backref="following")
+    followed = db.relationship("User", foreign_keys=[followed_id], backref="followers")
+
+
 class ScheduleEntry(db.Model):
     __tablename__ = "schedule_entries"
     id = db.Column(db.Integer, primary_key=True)

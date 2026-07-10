@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, session, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -30,6 +30,18 @@ def create_app():
         socketio.init_app(app, cors_allowed_origins="*")
     login_manager.login_view = 'auth.login'
 
+    from app.services.translations import _, get_language, set_language, LANGUAGES
+
+    @app.context_processor
+    def inject_translations():
+        lang = get_language()
+        return dict(_=_, lang=lang, LANGUAGES=LANGUAGES)
+
+    @app.route('/set-language/<lang>', methods=['POST'])
+    def set_language_route(lang):
+        set_language(lang)
+        return jsonify({"status": "ok"})
+
     @app.errorhandler(404)
     def not_found(e):
         return render_template('errors/404.html'), 404
@@ -39,10 +51,6 @@ def create_app():
         return render_template('errors/500.html'), 500
 
     @app.errorhandler(403)
-    def forbidden(e):
-        return render_template('errors/403.html'), 403
-
-
     def forbidden(e):
         return render_template('errors/403.html'), 403
 
