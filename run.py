@@ -1,4 +1,4 @@
-from app import create_app, db
+from app import create_app, db, socketio
 from app.models import User, StudentProfile, SemesterResult, Document, Notification
 
 app = create_app()
@@ -65,13 +65,13 @@ def seed_data():
         db.session.add(doc)
 
     notifs = [
-        ('S001','ERI Score Updated','Your ERI score increased to 84% after completing your internship!'),
-        ('S001','New Document','Your Semester 2 transcript has been uploaded.'),
-        ('S131','Top Performer','You are in the top 5% of your department. Congratulations!'),
+        ('S001','student','ERI Score Updated','Your ERI score increased to 84% after completing your internship!'),
+        ('S001','student','New Document','Your Semester 2 transcript has been uploaded.'),
+        ('S131','student','Top Performer','You are in the top 5% of your department. Congratulations!'),
     ]
-    for mat,title,msg in notifs:
+    for mat,role,title,msg in notifs:
         user = User.query.filter_by(matricule=mat).first()
-        n = Notification(user_id=user.id, title=title, message=msg)
+        n = Notification(recipient_id=user.id, recipient_role=role, type='announcement', title=title, body=msg)
         db.session.add(n)
 
     db.session.commit()
@@ -82,4 +82,4 @@ with app.app_context():
     seed_data()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

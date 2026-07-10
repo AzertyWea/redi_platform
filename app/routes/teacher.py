@@ -55,6 +55,19 @@ def attendance():
 
         db.session.commit()
 
+        from app.services.notification_service import emit_notification
+        for student in cls.students:
+            status = request.form.get(f'status_{student.id}', 'absent')
+            emit_notification(
+                recipient_id=student.user_id,
+                recipient_role="student",
+                type_="attendance",
+                title="Attendance Recorded",
+                body=f"Your attendance for {course.name} ({cls.display_name}) was marked as {status}.",
+                link="/student/dashboard",
+            )
+        db.session.commit()
+
         flash(f'Attendance saved for {cls.display_name} ({course.name}) - ERI scores updated!', 'success')
         return redirect(url_for('teacher.attendance', course_id=course.id, class_id=cls.id))
 

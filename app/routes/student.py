@@ -17,7 +17,7 @@ def dashboard():
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all() if profile else []
     docs = Document.query.filter_by(student_id=profile.id).limit(3).all() if profile else []
-    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
+    notifs = Notification.query.filter_by(recipient_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
 
     schedule = []
     eri_trend = []
@@ -128,6 +128,13 @@ def career_data():
                 description=request.form.get("description","").strip()
             )
             db.session.add(i)
+            from app.services.notification_service import emit_notification
+            emit_notification(
+                recipient_id=current_user.id, recipient_role="student",
+                type_="internship_offer", title="Internship Added",
+                body=f"Your internship at {i.company_name} as {i.role_title} has been recorded.",
+                link="/student/career-data",
+            )
             flash("Internship added successfully!", "success")
 
         elif action == "add_certification":

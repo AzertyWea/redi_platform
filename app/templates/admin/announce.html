@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/search"><i class="fas fa-search"></i> Search</a>
+<a href="/admin/classes"><i class="fas fa-school"></i> Classes</a>
+<a href="/admin/announce" class="active"><i class="fas fa-bullhorn"></i> Announce</a>
+<a href="/admin/audit-log"><i class="fas fa-history"></i> Audit Log</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Send Announcement{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h3><i class="fas fa-bullhorn"></i> New Announcement</h3>
+  <form method="POST">
+    <div class="form-group">
+      <label>Target audience</label>
+      <select name="target" class="form-control" required>
+        <option value="all_students">All Students</option>
+        <option value="all_teachers">All Teachers</option>
+        <option value="all_admins">All Administrators</option>
+        {% for cls in classes %}
+        <option value="class_{{ cls.id }}">Class: {{ cls.display_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" name="title" class="form-control" required placeholder="e.g. Exam Schedule Update">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea name="body" class="form-control" rows="5" required placeholder="Type your announcement here..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Announcement</button>
+  </form>
+</div>
+
+<style>
+.form-group { margin-bottom:16px }
+.form-group label { display:block; font-weight:600; margin-bottom:4px; font-size:13px }
+.form-control { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:14px }
+textarea.form-control { resize:vertical }
+</style>
+{% endblock %}

@@ -222,6 +222,16 @@ def commit_import(preview_data):
                         ca_score=ca, exam_score=exam, overall_score=overall
                     )
                     db.session.add(result)
+
+                from app.services.notification_service import emit_notification
+                emit_notification(
+                    recipient_id=user.id,
+                    recipient_role="student",
+                    type_="grade",
+                    title="Grades Updated",
+                    body=f"Your Semester {semester} grades have been posted (CA: {ca}, Exam: {exam}, Overall: {overall}).",
+                    link="/student/dashboard",
+                )
                 created += 1
 
             elif import_type == "documents":

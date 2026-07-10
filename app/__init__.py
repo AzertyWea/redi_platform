@@ -3,12 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO
 from config import Config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__)
@@ -18,6 +20,7 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
     login_manager.login_view = 'auth.login'
 
     @app.errorhandler(404)
@@ -42,6 +45,7 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.employer import employer_bp
     from app.routes.ai_upload import ai_bp
+    from app.routes.notifications import notifications_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp, url_prefix='/student')
@@ -49,4 +53,8 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(employer_bp, url_prefix='/employer')
     app.register_blueprint(ai_bp)
+    app.register_blueprint(notifications_bp)
+
+    from app.services import notification_service
+
     return app

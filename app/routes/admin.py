@@ -58,7 +58,7 @@ def student_detail(user_id):
     results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all()
     attendance_timeline = AttendanceRecord.query.filter_by(student_id=profile.id).order_by(AttendanceRecord.date.desc()).limit(30).all()
     docs = Document.query.filter_by(student_id=profile.id).order_by(Document.uploaded_at.desc()).all()
-    notifs = Notification.query.filter_by(user_id=viewed.id).order_by(Notification.created_at.desc()).limit(10).all()
+    notifs = Notification.query.filter_by(recipient_id=viewed.id).order_by(Notification.created_at.desc()).limit(10).all()
     schedule = ScheduleEntry.query.filter(ScheduleEntry.class_group_id == profile.class_group_id, ScheduleEntry.is_active == True).order_by(ScheduleEntry.day_of_week, ScheduleEntry.start_time).all() if profile.class_group_id else []
     eri_trend = []
     class_avg_trend = []
@@ -155,7 +155,53 @@ def upload():
 @login_required
 def documents():
     docs = Document.query.all()
+    # TODO: hook emit_notification(type_="letter_issued") here when
+    # admin verifies/issues an official document/attestation/letter
     return render_template("admin/documents.html", docs=docs)
+
+@admin_bp.route("/announce", methods=["GET", "POST"])
+@login_required
+@admin_required
+def announce():
+    from app.services.notification_service import emit_notification
+    from app.models import SchoolClass
+    if request.method == "POST":
+        target = request.form.get("target", "all_students")
+        title = request.form.get("title", "").strip()
+        body = request.form.get("body", "").strip()
+        if not title or not body:
+            flash("Title and body are required.", "danger")
+            return redirect(url_for("admin.announce"))
+        recipients = []
+        if target == "all_students":
+            users = User.query.filter_by(role="student").all()
+            recipients = [(u.id, "student") for u in users]
+        elif target == "all_teachers":
+            users = User.query.filter_by(role="teacher").all()
+            recipients = [(u.id, "teacher") for u in users]
+        elif target == "all_admins":
+            users = User.query.filter_by(role="admin").all()
+            recipients = [(u.id, "admin") for u in users]
+        elif target.startswith("class_"):
+            class_id = int(target.split("_")[1])
+            cls = SchoolClass.query.get(class_id)
+            if cls:
+                for s in cls.students:
+                    if s.user:
+                        recipients.append((s.user.id, "student"))
+        sent = 0
+        for uid, role in recipients:
+            emit_notification(
+                recipient_id=uid, recipient_role=role,
+                type_="announcement", title=title, body=body,
+                link=None,
+            )
+            sent += 1
+        db.session.commit()
+        flash(f"Announcement sent to {sent} recipient(s).", "success")
+        return redirect(url_for("admin.announce"))
+    classes = SchoolClass.query.order_by(SchoolClass.name).all()
+    return render_template("admin/announce.html", classes=classes)
 
 @admin_bp.route("/users")
 @login_required

@@ -74,11 +74,25 @@ def commit():
                 overall_score=score
             )
             db.session.add(result)
+            from app.services.notification_service import emit_notification
+            emit_notification(
+                recipient_id=user.id, recipient_role="student",
+                type_="grade", title="Grade Posted",
+                body=f"Your overall score {score} has been recorded (Semester {sem}).",
+                link="/student/dashboard",
+            )
             updated += 1
         elif data_type == "attendance":
             existing = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number.desc()).first()
             if existing:
                 existing.attendance = min(100, (existing.attendance or 0) + 5)
+                from app.services.notification_service import emit_notification
+                emit_notification(
+                    recipient_id=user.id, recipient_role="student",
+                    type_="attendance", title="Attendance Updated",
+                    body="Your attendance record has been updated via AI upload.",
+                    link="/student/dashboard",
+                )
                 updated += 1
         elif data_type == "roster":
             if not profile.department and p.get("value"):

@@ -80,11 +80,39 @@ class AttendanceRecord(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    recipient_role = db.Column(db.String(20))
+    type = db.Column(db.String(50))
     title = db.Column(db.String(200))
-    message = db.Column(db.Text)
+    body = db.Column(db.Text)
+    link = db.Column(db.String(500))
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    recipient = db.relationship("User", backref="notifications")
+
+def create_notification(recipient_id, recipient_role, type_, title, body, link=None):
+    n = Notification(
+        recipient_id=recipient_id,
+        recipient_role=recipient_role,
+        type=type_,
+        title=title,
+        body=body,
+        link=link,
+    )
+    db.session.add(n)
+    db.session.flush()
+    return n
+
+def get_unread_count(user_id):
+    return Notification.query.filter_by(recipient_id=user_id, is_read=False).count()
+
+def mark_as_read(notification_id):
+    n = Notification.query.get(notification_id)
+    if n:
+        n.is_read = True
+        return True
+    return False
 
 class Internship(db.Model):
     __tablename__ = "internships"
