@@ -3,14 +3,20 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
-from flask_socketio import SocketIO
 from config import Config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
-socketio = SocketIO()
+
+try:
+    from flask_socketio import SocketIO
+    socketio = SocketIO()
+    HAS_SOCKETIO = True
+except ImportError:
+    socketio = None
+    HAS_SOCKETIO = False
 
 def create_app():
     app = Flask(__name__)
@@ -20,7 +26,8 @@ def create_app():
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")
+    if HAS_SOCKETIO:
+        socketio.init_app(app, cors_allowed_origins="*")
     login_manager.login_view = 'auth.login'
 
     @app.errorhandler(404)

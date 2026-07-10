@@ -432,8 +432,6 @@ def bulk_import_confirm():
     flash(msg, "success")
     return redirect(url_for("admin.bulk_import"))
 
-from app.services.timetable_import import extract_timetable_from_pdf
-
 @admin_bp.route("/audit-log")
 @login_required
 @admin_required
@@ -458,6 +456,7 @@ def audit_log():
 @admin_bp.route("/timetable/upload", methods=["GET", "POST"])
 @login_required
 def timetable_upload():
+    from app.services.timetable_import import extract_timetable_from_pdf
     if request.method == "POST":
         pdf_file = request.files.get("pdf_file")
         if not pdf_file or pdf_file.filename == "":

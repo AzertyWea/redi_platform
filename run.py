@@ -1,4 +1,4 @@
-from app import create_app, db, socketio
+from app import create_app, db, socketio, HAS_SOCKETIO
 from app.models import User, StudentProfile, SemesterResult, Document, Notification
 
 app = create_app()
@@ -95,4 +95,7 @@ with app.app_context():
     seed_data()
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    if HAS_SOCKETIO:
+        socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    else:
+        app.run(host='0.0.0.0', port=5000, debug=True)

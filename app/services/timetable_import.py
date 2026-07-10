@@ -1,7 +1,6 @@
 ﻿import re
 import os
 import difflib
-from PIL import Image
 from app.models import Course, SchoolClass
 
 DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -47,14 +46,6 @@ def _ocr_extract_text(images):
     return full_text
 
 def _parse_ocr_lines_to_rows(text, course_by_code):
-    """
-    Best-effort line-by-line parsing of raw OCR text.
-    Less reliable than structured table extraction: OCR loses column alignment,
-    so each line is scanned independently for a day name, a time range, and a
-    course code. Anything else on the line is kept as free-text for the admin
-    to review in the preview screen, since OCR cannot reliably separate
-    course name / teacher / room without column structure.
-    """
     rows = []
     for line in text.split("\n"):
         line = line.strip()
@@ -78,13 +69,7 @@ def _parse_ocr_lines_to_rows(text, course_by_code):
     return rows
 
 def extract_timetable_from_pdf(file_storage):
-    """
-    Extracts a weekly timetable from an uploaded PDF or image file.
-    Strategy:
-      1. If it's a PDF with a real text-based table -> use structured extraction (most accurate).
-      2. If that finds nothing (scanned PDF, or the file is a plain image) -> fall back to OCR.
-    Returns a dict: { title_text, class_guess, academic_year_guess, rows: [...], used_ocr: bool, errors: [...] }
-    """
+    from PIL import Image
     import pdfplumber
     result = {"title_text": "", "class_guess": None, "academic_year_guess": "",
               "rows": [], "used_ocr": False, "errors": []}
@@ -133,7 +118,6 @@ def extract_timetable_from_pdf(file_storage):
                             })
 
                 if not result["rows"]:
-                    # Fallback: no usable table found -> likely a scanned/image-based PDF, try OCR
                     result["used_ocr"] = True
                     images = [page.to_image(resolution=200).original for page in pdf.pages]
                     full_text = _ocr_extract_text(images)
