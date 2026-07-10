@@ -41,7 +41,7 @@
       <button id="sidebar-toggle" style="background:none;border:none;font-size:20px;color:var(--primary);cursor:pointer;padding:4px">
         <i class="fas fa-bars"></i>
       </button>
-      <h1>{% block page_title %}{{ _('platform_name') }}{% endblock %}</h1>
+      <h1>{{ self.page_title() }}</h1>
     </div>
     <div class="topnav-actions">
       <div class="language-switcher">
