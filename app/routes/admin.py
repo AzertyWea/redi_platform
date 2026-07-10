@@ -1,8 +1,18 @@
-﻿from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file
-from flask_login import login_required
+﻿from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file, abort
+from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
-from app.models import User, StudentProfile, Document
+from functools import wraps
+from sqlalchemy import or_
+from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult
 from app import db
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != "admin":
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -17,6 +27,124 @@ def dashboard():
     return render_template("admin/dashboard.html",
         total_students=total_students, total_teachers=total_teachers,
         total_docs=total_docs, avg_eri=round(avg_eri,1), students=students)
+
+@admin_bp.route("/search")
+@login_required
+@admin_required
+def search():
+    q = request.args.get("q", "").strip()
+    results = []
+    if q:
+        pattern = f"%{q}%"
+        users = User.query.filter(
+            or_(User.name.ilike(pattern), User.matricule.ilike(pattern)),
+            User.role.in_(["student", "teacher"])
+        ).order_by(User.role, User.name).limit(50).all()
+        for u in users:
+            profile = StudentProfile.query.filter_by(user_id=u.id).first()
+            results.append({"user": u, "profile": profile})
+    return render_template("admin/search.html", query=q, results=results)
+
+@admin_bp.route("/student/<int:user_id>")
+@login_required
+@admin_required
+def student_detail(user_id):
+    from app.services.eri_engine import calculate_eri, predict_next_eri
+    from app.models import Notification, ScheduleEntry
+    viewed = User.query.get_or_404(user_id)
+    if viewed.role != "student":
+        abort(404)
+    profile = StudentProfile.query.filter_by(user_id=viewed.id).first_or_404()
+    results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all()
+    attendance_timeline = AttendanceRecord.query.filter_by(student_id=profile.id).order_by(AttendanceRecord.date.desc()).limit(30).all()
+    docs = Document.query.filter_by(student_id=profile.id).order_by(Document.uploaded_at.desc()).all()
+    notifs = Notification.query.filter_by(user_id=viewed.id).order_by(Notification.created_at.desc()).limit(10).all()
+    schedule = ScheduleEntry.query.filter(ScheduleEntry.class_group_id == profile.class_group_id, ScheduleEntry.is_active == True).order_by(ScheduleEntry.day_of_week, ScheduleEntry.start_time).all() if profile.class_group_id else []
+    eri_trend = []
+    class_avg_trend = []
+    sem_numbers = sorted(set(r.semester_number for r in results))
+    class_students = StudentProfile.query.filter_by(class_group_id=profile.class_group_id).all() if profile.class_group_id else []
+    for sem in sem_numbers:
+        sem_results = [r for r in results if r.semester_number == sem]
+        if sem_results:
+            last = sem_results[-1]
+            eri_trend.append({"semester": sem, "eri": last.overall_score})
+            classmates = [s for s in class_students if s.id != profile.id]
+            class_scores = []
+            for cs in classmates:
+                cr = SemesterResult.query.filter_by(student_id=cs.id, semester_number=sem).order_by(SemesterResult.semester_number.desc()).first()
+                if cr:
+                    class_scores.append(cr.overall_score)
+            class_avg_trend.append({"semester": sem, "avg_eri": round(sum(class_scores)/len(class_scores), 1) if class_scores else 0})
+    predicted_next = predict_next_eri(profile)
+    return render_template("student/dashboard.html",
+        profile=profile, results=results, attendance_timeline=attendance_timeline,
+        docs=docs, notifs=notifs, schedule=schedule, eri_trend=eri_trend,
+        class_avg_trend=class_avg_trend, predicted_next=predicted_next)
+
+@admin_bp.route("/teacher/<int:user_id>")
+@login_required
+@admin_required
+def teacher_detail(user_id):
+    from app.models import ScheduleEntry, Course, SchoolClass, Assignment, Quiz, AttendanceRecord
+    viewed = User.query.get_or_404(user_id)
+    if viewed.role != "teacher":
+        abort(404)
+    courses = Course.query.filter_by(teacher_id=viewed.id).order_by(Course.code).all()
+    course_ids = [c.id for c in courses]
+    schedule = ScheduleEntry.query.filter(ScheduleEntry.course_id.in_(course_ids), ScheduleEntry.is_active == True).order_by(ScheduleEntry.day_of_week, ScheduleEntry.start_time).all() if course_ids else []
+    assignments = Assignment.query.filter_by(teacher_id=viewed.id).order_by(Assignment.created_at.desc()).limit(20).all()
+    quizzes = Quiz.query.filter_by(teacher_id=viewed.id).order_by(Quiz.created_at.desc()).limit(20).all()
+    recent_attendance = AttendanceRecord.query.filter_by(teacher_id=viewed.id).order_by(AttendanceRecord.date.desc()).limit(30).all()
+    students = StudentProfile.query.all()
+    return render_template("admin/teacher_detail.html",
+        viewed=viewed, courses=courses, schedule=schedule,
+        assignments=assignments, quizzes=quizzes,
+        recent_attendance=recent_attendance, students=students)
+
+from app.models import SchoolClass, AuditLog
+from app.services.eri_engine import calculate_eri
+
+@admin_bp.route("/classes")
+@login_required
+@admin_required
+def class_list():
+    sort = request.args.get("sort", "")
+    classes = SchoolClass.query.order_by(SchoolClass.program_id, SchoolClass.level, SchoolClass.section).all()
+    class_data = []
+    for cls in classes:
+        student_count = StudentProfile.query.filter_by(class_group_id=cls.id).count()
+        teachers = set()
+        for c in cls.courses:
+            if c.teacher:
+                teachers.add(c.teacher.name)
+        eri_scores = [s.eri_score for s in cls.students if s.eri_score]
+        avg_eri = round(sum(eri_scores) / len(eri_scores), 1) if eri_scores else 0
+        class_data.append({"class": cls, "student_count": student_count, "teachers": sorted(teachers), "avg_eri": avg_eri})
+    if sort == "eri":
+        class_data.sort(key=lambda x: x["avg_eri"], reverse=True)
+    elif sort == "count":
+        class_data.sort(key=lambda x: x["student_count"], reverse=True)
+    return render_template("admin/class_list.html", class_data=class_data)
+
+@admin_bp.route("/classes/<int:class_id>/roster")
+@login_required
+@admin_required
+def class_roster(class_id):
+    cls = SchoolClass.query.get_or_404(class_id)
+    sort = request.args.get("sort", "")
+    students = StudentProfile.query.filter_by(class_group_id=cls.id).all()
+    roster = []
+    for s in students:
+        att_records = AttendanceRecord.query.filter_by(student_id=s.id).count()
+        att_present = AttendanceRecord.query.filter_by(student_id=s.id, status="present").count()
+        att_pct = round(att_present / att_records * 100, 1) if att_records else 0
+        roster.append({"profile": s, "attendance_pct": att_pct, "eri": s.eri_score or 0})
+    if sort == "eri":
+        roster.sort(key=lambda x: x["eri"], reverse=True)
+    elif sort == "attendance":
+        roster.sort(key=lambda x: x["attendance_pct"], reverse=True)
+    return render_template("admin/class_roster.html", cls=cls, roster=roster)
 
 @admin_bp.route("/upload", methods=["GET","POST"])
 @login_required
@@ -259,6 +387,27 @@ def bulk_import_confirm():
     return redirect(url_for("admin.bulk_import"))
 
 from app.services.timetable_import import extract_timetable_from_pdf
+
+@admin_bp.route("/audit-log")
+@login_required
+@admin_required
+def audit_log():
+    page = request.args.get("page", 1, type=int)
+    sort = request.args.get("sort", "-timestamp")
+    q = request.args.get("q", "").strip()
+    base = AuditLog.query
+    if q:
+        base = base.join(User).filter(
+            or_(User.name.ilike(f"%{q}%"),
+                   AuditLog.action.ilike(f"%{q}%"),
+                   AuditLog.target_type.ilike(f"%{q}%"))
+        )
+    if sort == "user":
+        base = base.order_by(User.name, AuditLog.timestamp.desc())
+    else:
+        base = base.order_by(AuditLog.timestamp.desc())
+    pagination = base.paginate(page=page, per_page=30, error_out=False)
+    return render_template("admin/audit_log.html", pagination=pagination, q=q, sort=sort)
 
 @admin_bp.route("/timetable/upload", methods=["GET", "POST"])
 @login_required

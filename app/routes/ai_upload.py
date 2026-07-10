@@ -84,5 +84,8 @@ def commit():
             if not profile.department and p.get("value"):
                 profile.department = p["value"]
                 updated += 1
+    from app.services.audit_logger import log_action
+    log_action("ai_upload_commit", target_type=data_type, target_id=None,
+               old_value=None, new_value=f"AI upload committed {updated} records ({data_type}) by {current_user.name}")
     db.session.commit()
     return jsonify({"success": True, "updated": updated})

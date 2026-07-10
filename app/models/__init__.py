@@ -251,6 +251,19 @@ course_classes = db.Table(
 
 Course.classes = db.relationship("SchoolClass", secondary=course_classes, backref="courses")
 
+class AuditLog(db.Model):
+    __tablename__ = "audit_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    role = db.Column(db.String(20))
+    action = db.Column(db.String(50), nullable=False)
+    target_type = db.Column(db.String(50))
+    target_id = db.Column(db.Integer)
+    old_value = db.Column(db.Text)
+    new_value = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship("User", backref="audit_logs")
+
 class ScheduleEntry(db.Model):
     __tablename__ = "schedule_entries"
     id = db.Column(db.Integer, primary_key=True)

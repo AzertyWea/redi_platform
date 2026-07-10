@@ -251,5 +251,9 @@ def commit_import(preview_data):
             errors.append(f"Row {r.get('_index', '?')}: {str(e)}")
             skipped += 1
 
+    from app.services.audit_logger import log_action
+    log_action("grade_import", target_type="bulk", target_id=None,
+               old_value=None, new_value=f"Bulk {import_type} import: {created} created, {skipped} skipped")
+
     db.session.commit()
     return {"created": created, "skipped": skipped, "errors": errors}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/search"><i class="fas fa-search"></i> Search</a>
+<a href="/admin/classes"><i class="fas fa-school"></i> Classes</a>
+<a href="/admin/audit-log"><i class="fas fa-history"></i> Audit Log</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Teacher: {{ viewed.name }}{% endblock %}
+{% block content %}
+<div class="stats-row">
+  <div class="stat-card"><div class="label">Matricule</div><div class="value teal" style="font-size:18px">{{ viewed.matricule }}</div></div>
+  <div class="stat-card"><div class="label">Department</div><div class="value blue" style="font-size:18px">{{ viewed.department or '-' }}</div></div>
+  <div class="stat-card"><div class="label">Courses Taught</div><div class="value amber" style="font-size:18px">{{ courses|length }}</div></div>
+  <div class="stat-card"><div class="label">Email</div><div class="value blue" style="font-size:14px">{{ viewed.email }}</div></div>
+</div>
+
+<div class="card">
+  <h3><i class="fas fa-book"></i> Courses Taught</h3>
+  <table class="table">
+    <thead><tr><th>Code</th><th>Name</th><th>Program</th><th>Semester</th></tr></thead>
+    <tbody>
+      {% for c in courses %}
+      <tr><td>{{ c.code }}</td><td>{{ c.name }}</td><td>{{ c.program.name if c.program else '-' }}</td><td>S{{ c.semester_number }}</td></tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center;color:var(--muted)">No courses assigned.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3><i class="fas fa-calendar-alt"></i> Weekly Schedule</h3>
+  <table class="table">
+    <thead><tr><th>Day</th><th>Time</th><th>Course</th><th>Class</th><th>Room</th></tr></thead>
+    <tbody>
+      {% for e in schedule %}
+      <tr><td>{{ e.day_of_week }}</td><td>{{ e.start_time.strftime('%H:%M') }} – {{ e.end_time.strftime('%H:%M') }}</td><td>{{ e.course.code }} — {{ e.course.name }}</td><td>{{ e.school_class.display_name if e.school_class else '-' }}</td><td>{{ e.room or '-' }}</td></tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align:center;color:var(--muted)">No schedule entries.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h3><i class="fas fa-file-pen"></i> Recent Assignments</h3>
+    <table class="table">
+      <thead><tr><th>Title</th><th>Course</th><th>Due Date</th></tr></thead>
+      <tbody>
+        {% for a in assignments %}
+        <tr><td>{{ a.title }}</td><td>{{ a.course }}</td><td>{{ a.due_date.strftime('%d %b %Y') if a.due_date else '-' }}</td></tr>
+        {% else %}
+        <tr><td colspan="3" style="text-align:center;color:var(--muted)">No assignments yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3><i class="fas fa-circle-question"></i> Recent Quizzes</h3>
+    <table class="table">
+      <thead><tr><th>Title</th><th>Course</th><th>Created</th></tr></thead>
+      <tbody>
+        {% for q in quizzes %}
+        <tr><td>{{ q.title }}</td><td>{{ q.course }}</td><td>{{ q.created_at.strftime('%d %b %Y') }}</td></tr>
+        {% else %}
+        <tr><td colspan="3" style="text-align:center;color:var(--muted)">No quizzes yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h3><i class="fas fa-clipboard-check"></i> Recent Attendance Marking</h3>
+  <table class="table">
+    <thead><tr><th>Date</th><th>Course</th><th>Student</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for a in recent_attendance %}
+      <tr><td>{{ a.date.strftime('%d %b %Y') }}</td><td>{{ a.course }}</td><td>{{ a.student.user.name if a.student else '-' }}</td><td><span class="badge {{ 'badge-success' if a.status == 'present' else 'badge-danger' }}">{{ a.status|capitalize }}</span></td></tr>
+      {% else %}
+      <tr><td colspan="4" style="text-align:center;color:var(--muted)">No attendance records yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -48,6 +48,11 @@ def attendance():
         # Recalculate ERI for every affected student so attendance reflects immediately
         for student in cls.students:
             student.eri_score = calculate_eri(student)
+
+        from app.services.audit_logger import log_action
+        log_action("attendance_update", target_type="SchoolClass", target_id=cls.id,
+                   old_value=None, new_value=f"Attendance recorded for {cls.display_name} ({course.name}) by {current_user.name}")
+
         db.session.commit()
 
         flash(f'Attendance saved for {cls.display_name} ({course.name}) - ERI scores updated!', 'success')

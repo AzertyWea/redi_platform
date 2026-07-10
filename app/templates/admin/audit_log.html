@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/search"><i class="fas fa-search"></i> Search</a>
+<a href="/admin/classes"><i class="fas fa-school"></i> Classes</a>
+<a href="/admin/audit-log" class="active"><i class="fas fa-history"></i> Audit Log</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history"></i> Activity Log</span>
+    <form method="GET" style="display:flex;gap:6px">
+      <input type="search" name="q" placeholder="Search logs..." value="{{ q }}" style="flex:1;min-width:200px;padding:6px 10px;border:1px solid var(--border);border-radius:6px">
+      <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+      {% if q %}<a href="/admin/audit-log" class="btn btn-sm btn-outline">Clear</a>{% endif %}
+    </form>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th><a href="?sort={% if sort == 'user' %}-timestamp{% else %}user{% endif %}" style="color:inherit">User ↕</a></th>
+        <th>Role</th>
+        <th>Action</th>
+        <th>Target</th>
+        <th>Details</th>
+        <th><a href="?sort={% if sort == '-timestamp' %}-timestamp{% else %}-timestamp{% endif %}" style="color:inherit">Timestamp ↕</a></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in pagination.items %}
+      <tr>
+        <td><strong>{{ log.user.name }}</strong></td>
+        <td><span class="badge badge-info">{{ log.role|capitalize }}</span></td>
+        <td><code>{{ log.action }}</code></td>
+        <td style="font-size:12px">{{ log.target_type or '—' }}{% if log.target_id %}#{{ log.target_id }}{% endif %}</td>
+        <td style="font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {% if log.new_value %}{{ log.new_value }}{% else %}—{% endif %}
+        </td>
+        <td style="font-size:12px;white-space:nowrap">{{ log.timestamp.strftime('%d %b %Y %H:%M') if log.timestamp else '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--muted)">No audit log entries yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:16px">
+    {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}&sort={{ sort }}&q={{ q }}" class="btn btn-sm btn-outline">← Previous</a>{% endif %}
+    <span style="padding:6px 12px;background:var(--bg-card);border-radius:6px;font-size:13px">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}&sort={{ sort }}&q={{ q }}" class="btn btn-sm btn-outline">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/admin/search"><i class="fas fa-search"></i> Search</a>
+<a href="/admin/classes" class="active"><i class="fas fa-school"></i> Classes</a>
+<a href="/admin/audit-log"><i class="fas fa-history"></i> Audit Log</a>
+<a href="/admin/bulk-import"><i class="fas fa-upload"></i> Bulk Import</a>
+<a href="/admin/documents"><i class="fas fa-folder"></i> Documents</a>
+<a href="/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/admin/structure"><i class="fas fa-sitemap"></i> Structure</a>
+<a href="/admin/timetable"><i class="fas fa-calendar-alt"></i> Timetable</a>
+{% endblock %}
+{% block page_title %}Class Roster Browser{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-school"></i> All Classes</span>
+    <div style="display:flex;gap:8px;font-size:12px">
+      <a href="?sort=" class="btn btn-sm {{ 'btn-primary' if not request.args.get('sort') else 'btn-outline' }}">Default</a>
+      <a href="?sort=eri" class="btn btn-sm {{ 'btn-primary' if request.args.get('sort') == 'eri' else 'btn-outline' }}">Sort by ERI</a>
+      <a href="?sort=count" class="btn btn-sm {{ 'btn-primary' if request.args.get('sort') == 'count' else 'btn-outline' }}">Sort by students</a>
+    </div>
+  </div>
+  <table class="table">
+    <thead><tr><th>Class</th><th>Program</th><th>Level</th><th>Section</th><th>Students</th><th>Avg ERI</th><th>Teacher(s)</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for cd in class_data %}
+      <tr>
+        <td><strong>{{ cd.class.name }}</strong></td>
+        <td>{{ cd.class.program.name }}</td>
+        <td>L{{ cd.class.level }}</td>
+        <td>{{ cd.class.section or '—' }}</td>
+        <td>{{ cd.student_count }}</td>
+        <td><span style="color:{{ '#17A589' if cd.avg_eri >= 75 else '#E67E22' if cd.avg_eri >= 50 else '#C0392B' }};font-weight:700">{{ cd.avg_eri }}%</span></td>
+        <td style="font-size:12px">{{ cd.teachers|join(', ') or '—' }}</td>
+        <td><a href="/admin/classes/{{ cd.class.id }}/roster" class="btn btn-sm btn-primary"><i class="fas fa-users"></i> Roster</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" style="text-align:center;color:var(--muted)">No classes found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
