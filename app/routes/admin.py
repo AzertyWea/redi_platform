@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash
 from functools import wraps
 from sqlalchemy import or_
 from datetime import time as dtime
-from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult, SchoolClass, AuditLog, Department, Program, Course, ScheduleEntry
+from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult, SchoolClass, AuditLog, Department, Program, Course, ScheduleEntry, Assignment, Quiz
 from app import db
 
 def admin_required(f):
@@ -151,6 +151,7 @@ def upload():
 
 @admin_bp.route("/documents")
 @login_required
+@admin_required
 def documents():
     docs = Document.query.all()
     # TODO: hook emit_notification(type_="letter_issued") here when
