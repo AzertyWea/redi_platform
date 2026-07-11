@@ -153,10 +153,29 @@ def calculate_eri_trend(student_profile):
 
 def calculate_class_eri_trend(school_class):
     """Average ERI trend across every student in a class, semester by semester."""
+    students = school_class.students
+    sids = [s.id for s in students]
+    if not sids:
+        return []
+
+    results = SemesterResult.query.filter(SemesterResult.student_id.in_(sids)).order_by(SemesterResult.semester_number).all()
+    by_student = {}
+    for r in results:
+        by_student.setdefault(r.student_id, []).append(r)
+
     by_sem = {}
-    for student in school_class.students:
-        for point in calculate_eri_trend(student):
-            by_sem.setdefault(point["semester"], []).append(point["eri"])
+    for sid in sids:
+        s_results = by_student.get(sid, [])
+        if not s_results:
+            continue
+        max_sem = max(r.semester_number for r in s_results)
+        for r in s_results:
+            sem = r.semester_number
+            sem_results = [x for x in s_results if x.semester_number <= sem]
+            academic_score = sum(x.overall_score for x in sem_results) / len(sem_results)
+            progress = sem / max_sem if max_sem else 1
+            estimated_eri = academic_score * 0.30
+            by_sem.setdefault(sem, []).append(min(estimated_eri, 100))
     return [{"semester": sem, "avg_eri": round(sum(v) / len(v), 1)} for sem, v in sorted(by_sem.items())]
 
 def predict_next_eri(trend):

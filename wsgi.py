@@ -8,4 +8,11 @@ if path not in sys.path:
 os.environ['FLASK_ENV'] = 'production'
 os.environ['WTF_CSRF_ENABLED'] = 'True'
 
-from run import app as application
+from app import create_app, db
+from run import migrate_schema, seed_data
+
+application = create_app()
+with application.app_context():
+    db.create_all()
+    migrate_schema()
+    seed_data()

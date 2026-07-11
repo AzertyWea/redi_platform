@@ -7,4 +7,4 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///redi.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = None
+    WTF_CSRF_TIME_LIMIT = 3600

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Projects – SERA Foundation</title>
+  <meta name="description" content="Explore SERA Foundation's active humanitarian projects: Education Support, Orphan Care, Food Distribution, Healthcare Assistance, and Youth Empowerment across Africa.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav scrolled">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-icon">S</span>
+        SERA Foundation
+      </a>
+      <div class="nav__links">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="about.html" class="nav__link">About Us</a>
+        <a href="projects.html" class="nav__link active">Projects</a>
+        <a href="donate.html" class="nav__link">Donate</a>
+        <a href="stories.html" class="nav__link">Stories</a>
+        <a href="contact.html" class="nav__link">Contact</a>
+      </div>
+      <div class="nav__actions">
+        <button class="theme-toggle theme-toggle-desktop" aria-label="Toggle dark mode">&#9790;</button>
+        <a href="donate.html" class="btn btn--gold btn--sm nav__btn-desktop">Donate Now</a>
+        <button class="nav__hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="nav__mobile">
+    <a href="index.html" class="nav__link">Home</a>
+    <a href="about.html" class="nav__link">About Us</a>
+    <a href="projects.html" class="nav__link active">Projects</a>
+    <a href="donate.html" class="nav__link">Donate</a>
+    <a href="stories.html" class="nav__link">Stories</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <button class="theme-toggle" aria-label="Toggle dark mode">&#9790;</button>
+    <a href="donate.html" class="btn btn--gold">Donate Now</a>
+  </div>
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__breadcrumb">
+        <a href="index.html">Home</a> <span>/</span> <span>Our Projects</span>
+      </div>
+      <h1>Our Projects</h1>
+      <p>Discover the programs and initiatives we are running across Africa to transform communities and improve lives.</p>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section class="section">
+    <div class="container">
+      <div class="project-filters reveal">
+        <button class="project-filter active" data-filter="all">All Projects</button>
+        <button class="project-filter" data-filter="education">Education</button>
+        <button class="project-filter" data-filter="orphan">Orphan Care</button>
+        <button class="project-filter" data-filter="food">Food</button>
+        <button class="project-filter" data-filter="health">Healthcare</button>
+        <button class="project-filter" data-filter="youth">Youth</button>
+      </div>
+
+      <div class="grid-3">
+        <!-- Education Support Program -->
+        <div class="project-card reveal reveal-delay-1" data-category="education">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=600&q=80" alt="Education Support Program">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="72"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Education Support Program</h3>
+            <p>Building schools, providing scholarships, and supplying learning materials to children in rural communities across West and Central Africa.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$48,200 raised</span>
+              <span>Goal: $67,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>1,200+</strong>
+                <span>Students enrolled</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>15</strong>
+                <span>Schools built</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+
+        <!-- Orphan Care Program -->
+        <div class="project-card reveal reveal-delay-2" data-category="orphan">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&q=80" alt="Orphan Care Program">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="85"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Orphan Care Program</h3>
+            <p>Providing safe homes, education, nutrition, and emotional support to orphaned and abandoned children who have lost their parents.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$62,500 raised</span>
+              <span>Goal: $75,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>350+</strong>
+                <span>Orphans supported</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>8</strong>
+                <span>Care centers</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+
+        <!-- Food Distribution Program -->
+        <div class="project-card reveal reveal-delay-3" data-category="food">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?w=600&q=80" alt="Food Distribution Program">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="60"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Food Distribution Program</h3>
+            <p>Delivering essential food supplies to families facing hunger and malnutrition, especially during drought seasons and economic crises.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$31,000 raised</span>
+              <span>Goal: $52,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>8,000+</strong>
+                <span>Families fed</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>12</strong>
+                <span>Distribution centers</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+
+        <!-- Healthcare Assistance -->
+        <div class="project-card reveal reveal-delay-1" data-category="health">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1578496479531-32e296d5c6e1?w=600&q=80" alt="Healthcare Assistance">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="45"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Healthcare Assistance</h3>
+            <p>Operating mobile health clinics, providing free medication, and conducting health awareness campaigns in underserved rural areas.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$22,800 raised</span>
+              <span>Goal: $50,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>5,000+</strong>
+                <span>Patients treated</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>20</strong>
+                <span>Health camps</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+
+        <!-- Youth Empowerment -->
+        <div class="project-card reveal reveal-delay-2" data-category="youth">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80" alt="Youth Empowerment">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="55"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Youth Empowerment</h3>
+            <p>Training young people in vocational skills, entrepreneurship, and leadership to help them become self-sufficient community leaders.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$18,400 raised</span>
+              <span>Goal: $35,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>600+</strong>
+                <span>Youth trained</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>85%</strong>
+                <span>Employment rate</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+
+        <!-- Community Development -->
+        <div class="project-card reveal reveal-delay-3" data-category="youth">
+          <div class="project-card__image">
+            <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&q=80" alt="Community Development">
+            <div class="project-card__progress-bar">
+              <div class="project-card__progress-fill" data-progress="40"></div>
+            </div>
+          </div>
+          <div class="project-card__body">
+            <h3>Community Development</h3>
+            <p>Building clean water wells, sanitation facilities, and community centers to improve living conditions across rural villages.</p>
+            <div class="project-card__meta">
+              <span class="project-card__raised">$15,600 raised</span>
+              <span>Goal: $40,000</span>
+            </div>
+            <div class="impact-card__stats" style="margin-bottom:1rem;">
+              <div class="impact-card__stat">
+                <strong>25</strong>
+                <span>Wells built</span>
+              </div>
+              <div class="impact-card__stat">
+                <strong>30+</strong>
+                <span>Villages served</span>
+              </div>
+            </div>
+            <a href="donate.html" class="btn btn--primary btn--sm" style="width:100%; justify-content:center;">Support This Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section section--alt">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <div class="cta-banner__bg"></div>
+        <div class="cta-banner__content">
+          <h2>Want to Support a Project?</h2>
+          <p>Every contribution helps us expand our reach and impact more lives. Choose a project or make a general donation today.</p>
+          <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="donate.html" class="btn btn--gold btn--lg">Donate Now</a>
+            <a href="contact.html" class="btn btn--outline btn--lg">Partner With Us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <a href="index.html" class="footer__logo">
+            <span class="footer__logo-icon">S</span>
+            SERA Foundation
+          </a>
+          <p class="footer__desc">A registered non-profit humanitarian organization dedicated to supporting vulnerable communities, orphaned children, and underserved families across Africa through education, healthcare, and sustainable development.</p>
+          <a href="donate.html" class="btn btn--gold btn--sm footer__donate-btn">Donate Now</a>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <div class="footer__links">
+            <a href="index.html" class="footer__link">Home</a>
+            <a href="about.html" class="footer__link">About Us</a>
+            <a href="projects.html" class="footer__link">Our Projects</a>
+            <a href="donate.html" class="footer__link">Donate</a>
+            <a href="stories.html" class="footer__link">Success Stories</a>
+            <a href="contact.html" class="footer__link">Contact Us</a>
+          </div>
+        </div>
+        <div>
+          <h4>Programs</h4>
+          <div class="footer__links">
+            <a href="projects.html" class="footer__link">Education Support</a>
+            <a href="projects.html" class="footer__link">Orphan Care</a>
+            <a href="projects.html" class="footer__link">Food Distribution</a>
+            <a href="projects.html" class="footer__link">Healthcare Assistance</a>
+            <a href="projects.html" class="footer__link">Youth Empowerment</a>
+          </div>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <div class="footer__links">
+            <a href="tel:+221771234567" class="footer__link">+221 77 123 45 67</a>
+            <a href="mailto:info@serafoundation.org" class="footer__link">info@serafoundation.org</a>
+            <span class="footer__link">Dakar, Senegal</span>
+          </div>
+          <div class="footer__socials" style="margin-top:1rem;">
+            <a href="#" class="footer__social" aria-label="Facebook">f</a>
+            <a href="#" class="footer__social" aria-label="Twitter">X</a>
+            <a href="#" class="footer__social" aria-label="Instagram">&#9679;</a>
+            <a href="#" class="footer__social" aria-label="YouTube">&#9654;</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>&copy; 2026 SERA Foundation. All rights reserved.</span>
+        <div class="footer__bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" aria-label="Back to top">&#8593;</button>
+  <script src="js/main.js"></script>
+</body>
+</html>

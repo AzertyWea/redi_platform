@@ -1,5 +1,6 @@
 import json, os, pickle
 import numpy as np
+from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -14,46 +15,97 @@ SCALER_PATH = os.path.join(MODEL_DIR, "redi_scaler.pkl")
 
 REDI_THRESHOLD = 70
 
-def extract_features(student_profile):
-    """Build a feature vector for a student: 8 numeric features."""
-    sid = student_profile.id
-    eri = student_profile.eri_score or 0
-
-    results = SemesterResult.query.filter_by(student_id=sid).all()
-    academic = sum(r.overall_score for r in results) / len(results) if results else 0
-
-    records = AttendanceRecord.query.filter_by(student_id=sid).all()
-    att_rate = (sum(1 for r in records if r.status == "present") / len(records) * 100) if records else 0
-
-    n_internships = Internship.query.filter_by(student_id=sid).count()
-    n_certs = Certification.query.filter_by(student_id=sid).count()
-    n_projects = Project.query.filter_by(student_id=sid).count()
-
-    submissions = AssignmentSubmission.query.filter_by(student_id=sid).all()
-    scored = [s for s in submissions if s.score is not None]
-    assign_score = (sum(s.score for s in scored) / len(scored)) if scored else 0
-
-    q_results = QuizResult.query.filter_by(student_id=sid).all()
-    quiz_score = (sum(q.score / q.max_score for q in q_results) / len(q_results) * 100) if q_results else 0
-
-    total_sems = (student_profile.duration_years or 2) * 2
-    sem_progress = (student_profile.current_semester or 1) / total_sems
-
-    return np.array([[eri, academic, att_rate, n_internships, n_certs, n_projects, assign_score, sem_progress]])
-
 FEATURE_NAMES = ["ERI Score", "Academic Avg", "Attendance Rate", "Internships", "Certifications", "Projects", "Assignment Score", "Semester Progress"]
 
+def _batch_features(student_ids):
+    """Pre-fetch all ML feature data for a list of student IDs using batched queries."""
+    if not student_ids:
+        return defaultdict(lambda: [0]*8)
+    ids_set = set(student_ids)
+    sid_list = list(ids_set)
+
+    eri_map = {s.id: (s.eri_score or 0, s.duration_years or 2, s.current_semester or 1)
+               for s in StudentProfile.query.filter(StudentProfile.id.in_(sid_list)).all()}
+
+    sem_rows = SemesterResult.query.filter(SemesterResult.student_id.in_(sid_list)).all()
+    acad_map = defaultdict(list)
+    for r in sem_rows:
+        acad_map[r.student_id].append(r.overall_score)
+
+    att_rows = db.session.query(
+        AttendanceRecord.student_id,
+        AttendanceRecord.status
+    ).filter(AttendanceRecord.student_id.in_(sid_list)).all()
+    att_map = defaultdict(lambda: {"total": 0, "present": 0})
+    for sid, status in att_rows:
+        att_map[sid]["total"] += 1
+        if status == "present":
+            att_map[sid]["present"] += 1
+
+    intern_counts = dict(db.session.query(Internship.student_id, db.func.count()).filter(
+        Internship.student_id.in_(sid_list)).group_by(Internship.student_id).all())
+    cert_counts = dict(db.session.query(Certification.student_id, db.func.count()).filter(
+        Certification.student_id.in_(sid_list)).group_by(Certification.student_id).all())
+    proj_counts = dict(db.session.query(Project.student_id, db.func.count()).filter(
+        Project.student_id.in_(sid_list)).group_by(Project.student_id).all())
+
+    sub_rows = AssignmentSubmission.query.filter(
+        AssignmentSubmission.student_id.in_(sid_list),
+        AssignmentSubmission.score.isnot(None)
+    ).all()
+    assign_map = defaultdict(list)
+    for r in sub_rows:
+        assign_map[r.student_id].append(r.score)
+
+    qz_rows = QuizResult.query.filter(QuizResult.student_id.in_(sid_list)).all()
+    quiz_map = defaultdict(list)
+    for r in qz_rows:
+        quiz_map[r.student_id].append(r.score / r.max_score if r.max_score else 0)
+
+    features = {}
+    for sid in ids_set:
+        eri, dur, cur_sem = eri_map.get(sid, (0, 2, 1))
+        scores = acad_map.get(sid, [])
+        academic = sum(scores) / len(scores) if scores else 0
+
+        att = att_map.get(sid, {"total": 0, "present": 0})
+        att_rate = (att["present"] / att["total"] * 100) if att["total"] else 0
+
+        n_internships = intern_counts.get(sid, 0)
+        n_certs = cert_counts.get(sid, 0)
+        n_projects = proj_counts.get(sid, 0)
+
+        sc = assign_map.get(sid, [])
+        assign_score = sum(sc) / len(sc) if sc else 0
+
+        qz = quiz_map.get(sid, [])
+        quiz_score = (sum(qz) / len(qz) * 100) if qz else 0
+
+        total_sems = dur * 2
+        sem_progress = cur_sem / total_sems
+
+        features[sid] = [eri, academic, att_rate, n_internships, n_certs, n_projects, assign_score, sem_progress]
+
+    return features
+
+def extract_features(student_profile):
+    """Build a feature vector for a single student: 8 numeric features (uses batched helper)."""
+    feats = _batch_features([student_profile.id])
+    return np.array([feats[student_profile.id]])
+
 def build_training_data():
-    """Build X (feature matrix) and y (labels) from all students."""
+    """Build X (feature matrix) and y (labels) from all students using batch queries."""
     students = StudentProfile.query.all()
+    sids = [s.id for s in students]
+    feat_map = _batch_features(sids)
+    semester_has = set(r.student_id for r in SemesterResult.query.filter(
+        SemesterResult.student_id.in_(sids)).all())
     X, y = [], []
     for s in students:
-        results = SemesterResult.query.filter_by(student_id=s.id).order_by(SemesterResult.semester_number.desc()).first()
-        if not results:
+        if s.id not in semester_has:
             continue
         label = 1 if (s.eri_score or 0) >= REDI_THRESHOLD else 0
-        feats = extract_features(s)
-        X.append(feats[0])
+        X.append(feat_map.get(s.id, [0]*8))
         y.append(label)
     return np.array(X), np.array(y)
 
@@ -156,22 +208,24 @@ def _save_prediction(student_profile, probability, prediction, model_version, fe
 def predict_all():
     """Run prediction for every student with data. Returns count."""
     students = StudentProfile.query.all()
+    sids = [s.id for s in students]
+    feat_map = _batch_features(sids)
     if not os.path.exists(MODEL_PATH):
         return 0
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
     with open(SCALER_PATH, "rb") as f:
         scaler = pickle.load(f)
+    coef = model.coef_[0]
+    top_idx = np.argsort(np.abs(coef))[::-1][:3]
+    top_factors = [FEATURE_NAMES[i] for i in top_idx]
     count = 0
     for s in students:
         try:
-            feats = extract_features(s)
+            feats = np.array([feat_map.get(s.id, [0]*8)])
             feats_scaled = scaler.transform(feats)
             prob = model.predict_proba(feats_scaled)[0, 1]
             pred = bool(model.predict(feats_scaled)[0])
-            coef = model.coef_[0]
-            top_idx = np.argsort(np.abs(coef))[::-1][:3]
-            top_factors = [FEATURE_NAMES[i] for i in top_idx]
             _save_prediction(s, prob, pred, "v1", feats[0].tolist(), top_factors)
             count += 1
         except Exception:

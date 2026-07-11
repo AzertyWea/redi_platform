@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us – SERA Foundation</title>
+  <meta name="description" content="Get in touch with SERA Foundation. Contact us by phone, email, or WhatsApp. We'd love to hear from you about volunteering, partnerships, and donations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav scrolled">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-icon">S</span>
+        SERA Foundation
+      </a>
+      <div class="nav__links">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="about.html" class="nav__link">About Us</a>
+        <a href="projects.html" class="nav__link">Projects</a>
+        <a href="donate.html" class="nav__link">Donate</a>
+        <a href="stories.html" class="nav__link">Stories</a>
+        <a href="contact.html" class="nav__link active">Contact</a>
+      </div>
+      <div class="nav__actions">
+        <button class="theme-toggle theme-toggle-desktop" aria-label="Toggle dark mode">&#9790;</button>
+        <a href="donate.html" class="btn btn--gold btn--sm nav__btn-desktop">Donate Now</a>
+        <button class="nav__hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="nav__mobile">
+    <a href="index.html" class="nav__link">Home</a>
+    <a href="about.html" class="nav__link">About Us</a>
+    <a href="projects.html" class="nav__link">Projects</a>
+    <a href="donate.html" class="nav__link">Donate</a>
+    <a href="stories.html" class="nav__link">Stories</a>
+    <a href="contact.html" class="nav__link active">Contact</a>
+    <button class="theme-toggle" aria-label="Toggle dark mode">&#9790;</button>
+    <a href="donate.html" class="btn btn--gold">Donate Now</a>
+  </div>
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__breadcrumb">
+        <a href="index.html">Home</a> <span>/</span> <span>Contact Us</span>
+      </div>
+      <h1>Contact Us</h1>
+      <p>We would love to hear from you. Reach out for inquiries, partnerships, volunteering, or to learn more about our work.</p>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="section">
+    <div class="container">
+      <div class="contact-grid">
+        <!-- Contact Info -->
+        <div class="contact-info-card reveal">
+          <h2>Get in Touch</h2>
+          <p>Whether you want to donate, volunteer, partner with us, or simply learn more — we're here to help.</p>
+          <div class="contact-items">
+            <div class="contact-item">
+              <div class="contact-item__icon">&#128222;</div>
+              <div class="contact-item__text">
+                <strong>Phone / WhatsApp</strong>
+                <span>+221 77 123 45 67</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item__icon">&#9993;</div>
+              <div class="contact-item__text">
+                <strong>Email</strong>
+                <span>info@serafoundation.org</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item__icon">&#128205;</div>
+              <div class="contact-item__text">
+                <strong>Location</strong>
+                <span>Dakar, Senegal<br> Rue Léopold Sédar Senghor, Plateau District</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item__icon">&#128337;</div>
+              <div class="contact-item__text">
+                <strong>Working Hours</strong>
+                <span>Monday – Friday: 8:00 AM – 5:00 PM<br>Saturday: 9:00 AM – 1:00 PM</span>
+              </div>
+            </div>
+          </div>
+          <h4 style="margin-bottom:.75rem; font-family:var(--font-main); font-size:.9rem;">Follow Us</h4>
+          <div class="contact-socials">
+            <a href="#" class="contact-social" aria-label="Facebook">f</a>
+            <a href="#" class="contact-social" aria-label="Twitter">X</a>
+            <a href="#" class="contact-social" aria-label="Instagram">&#9679;</a>
+            <a href="#" class="contact-social" aria-label="YouTube">&#9654;</a>
+            <a href="#" class="contact-social" aria-label="WhatsApp">&#9742;</a>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="contact-form reveal reveal-delay-2">
+          <h2>Send Us a Message</h2>
+          <p>Fill out the form below and we will get back to you within 24 hours.</p>
+          <form id="contactForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" placeholder="Your full name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="your@email.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject</label>
+              <select id="subject" required>
+                <option value="" disabled selected>Select a subject</option>
+                <option value="donation">Donation Inquiry</option>
+                <option value="volunteer">Volunteering</option>
+                <option value="partnership">Partnership Opportunity</option>
+                <option value="media">Media &amp; Press</option>
+                <option value="general">General Inquiry</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" placeholder="Tell us how we can help, or share your message..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg" style="width:100%; justify-content:center;">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map placeholder -->
+  <section class="section section--alt">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">Our Location</span>
+        <h2 class="section-title">Find Us in Dakar, Senegal</h2>
+        <p class="section-subtitle">Our headquarters is located in the heart of Dakar, serving communities across West and Central Africa.</p>
+      </div>
+      <div class="reveal" style="border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-lg); height:360px; background:var(--gray-200); display:flex; align-items:center; justify-content:center; margin-top:1.5rem;">
+        <div style="text-align:center; color:var(--gray-500);">
+          <div style="font-size:3rem; margin-bottom:.5rem;">&#128506;</div>
+          <p style="font-size:1rem; font-weight:500;">Interactive Map</p>
+          <p style="font-size:.85rem;">Rue Léopold Sédar Senghor, Plateau, Dakar, Senegal</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">FAQ</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+      </div>
+      <div class="grid-2" style="margin-top:2rem;">
+        <div class="value-card reveal reveal-delay-1" style="text-align:left;">
+          <h3 style="font-size:1rem; font-family:var(--font-main);">How can I donate?</h3>
+          <p>You can donate via Mobile Money (Orange Money, MTN), bank transfer, or visit our office directly. Online card payments will be available soon.</p>
+        </div>
+        <div class="value-card reveal reveal-delay-2" style="text-align:left;">
+          <h3 style="font-size:1rem; font-family:var(--font-main);">Can I volunteer with SERA?</h3>
+          <p>Absolutely! We welcome volunteers from all backgrounds. Contact us with your skills and availability, and we will match you with a program.</p>
+        </div>
+        <div class="value-card reveal reveal-delay-3" style="text-align:left;">
+          <h3 style="font-size:1rem; font-family:var(--font-main);">Is my donation tax-deductible?</h3>
+          <p>As a registered non-profit, we can provide donation receipts. Tax deductibility depends on your country's regulations. Contact us for details.</p>
+        </div>
+        <div class="value-card reveal reveal-delay-4" style="text-align:left;">
+          <h3 style="font-size:1rem; font-family:var(--font-main);">How do I know my donation is used well?</h3>
+          <p>We publish annual financial reports and welcome on-site visits. Every donation is tracked and allocated according to our transparency policy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <a href="index.html" class="footer__logo">
+            <span class="footer__logo-icon">S</span>
+            SERA Foundation
+          </a>
+          <p class="footer__desc">A registered non-profit humanitarian organization dedicated to supporting vulnerable communities, orphaned children, and underserved families across Africa through education, healthcare, and sustainable development.</p>
+          <a href="donate.html" class="btn btn--gold btn--sm footer__donate-btn">Donate Now</a>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <div class="footer__links">
+            <a href="index.html" class="footer__link">Home</a>
+            <a href="about.html" class="footer__link">About Us</a>
+            <a href="projects.html" class="footer__link">Our Projects</a>
+            <a href="donate.html" class="footer__link">Donate</a>
+            <a href="stories.html" class="footer__link">Success Stories</a>
+            <a href="contact.html" class="footer__link">Contact Us</a>
+          </div>
+        </div>
+        <div>
+          <h4>Programs</h4>
+          <div class="footer__links">
+            <a href="projects.html" class="footer__link">Education Support</a>
+            <a href="projects.html" class="footer__link">Orphan Care</a>
+            <a href="projects.html" class="footer__link">Food Distribution</a>
+            <a href="projects.html" class="footer__link">Healthcare Assistance</a>
+            <a href="projects.html" class="footer__link">Youth Empowerment</a>
+          </div>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <div class="footer__links">
+            <a href="tel:+221771234567" class="footer__link">+221 77 123 45 67</a>
+            <a href="mailto:info@serafoundation.org" class="footer__link">info@serafoundation.org</a>
+            <span class="footer__link">Dakar, Senegal</span>
+          </div>
+          <div class="footer__socials" style="margin-top:1rem;">
+            <a href="#" class="footer__social" aria-label="Facebook">f</a>
+            <a href="#" class="footer__social" aria-label="Twitter">X</a>
+            <a href="#" class="footer__social" aria-label="Instagram">&#9679;</a>
+            <a href="#" class="footer__social" aria-label="YouTube">&#9654;</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>&copy; 2026 SERA Foundation. All rights reserved.</span>
+        <div class="footer__bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" aria-label="Back to top">&#8593;</button>
+  <script src="js/main.js"></script>
+</body>
+</html>

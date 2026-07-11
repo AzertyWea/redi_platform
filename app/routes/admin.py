@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from functools import wraps
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from datetime import time as dtime
 from app.models import User, StudentProfile, Document, AttendanceRecord, SemesterResult, SchoolClass, AuditLog, Department, Program, Course, ScheduleEntry, Assignment, Quiz
 from app import db
@@ -78,7 +78,7 @@ def student_detail(user_id):
                 if cr:
                     class_scores.append(cr.overall_score)
             class_avg_trend.append({"semester": sem, "avg_eri": round(sum(class_scores)/len(class_scores), 1) if class_scores else 0})
-    predicted_next = predict_next_eri(profile)
+    predicted_next = predict_next_eri(eri_trend)
     return render_template("student/dashboard.html",
         profile=profile, results=results, attendance_timeline=attendance_timeline,
         docs=docs, notifs=notifs, schedule=schedule, eri_trend=eri_trend,
@@ -109,10 +109,14 @@ def teacher_detail(user_id):
 @admin_required
 def class_list():
     sort = request.args.get("sort", "")
-    classes = SchoolClass.query.order_by(SchoolClass.program_id, SchoolClass.level, SchoolClass.section).all()
+    classes = SchoolClass.query.options(
+        db.joinedload(SchoolClass.program),
+        db.joinedload(SchoolClass.students),
+        db.joinedload(SchoolClass.courses).joinedload(Course.teacher)
+    ).order_by(SchoolClass.program_id, SchoolClass.level, SchoolClass.section).all()
     class_data = []
     for cls in classes:
-        student_count = StudentProfile.query.filter_by(class_group_id=cls.id).count()
+        student_count = len(cls.students)
         teachers = set()
         for c in cls.courses:
             if c.teacher:
@@ -133,11 +137,20 @@ def class_roster(class_id):
     cls = SchoolClass.query.get_or_404(class_id)
     sort = request.args.get("sort", "")
     students = StudentProfile.query.filter_by(class_group_id=cls.id).all()
+    student_ids = [s.id for s in students]
+    att_counts = {}
+    if student_ids:
+        rows = db.session.query(
+            AttendanceRecord.student_id,
+            func.count().label("total"),
+            func.sum(func.case((AttendanceRecord.status == "present", 1), else_=0)).label("present")
+        ).filter(AttendanceRecord.student_id.in_(student_ids)).group_by(AttendanceRecord.student_id).all()
+        for row in rows:
+            att_counts[row.student_id] = (row.total, row.present)
     roster = []
     for s in students:
-        att_records = AttendanceRecord.query.filter_by(student_id=s.id).count()
-        att_present = AttendanceRecord.query.filter_by(student_id=s.id, status="present").count()
-        att_pct = round(att_present / att_records * 100, 1) if att_records else 0
+        total, present = att_counts.get(s.id, (0, 0))
+        att_pct = round(present / total * 100, 1) if total else 0
         roster.append({"profile": s, "attendance_pct": att_pct, "eri": s.eri_score or 0})
     if sort == "eri":
         roster.sort(key=lambda x: x["eri"], reverse=True)
@@ -154,10 +167,9 @@ def upload():
 @login_required
 @admin_required
 def documents():
-    docs = Document.query.all()
-    # TODO: hook emit_notification(type_="letter_issued") here when
-    # admin verifies/issues an official document/attestation/letter
-    return render_template("admin/documents.html", docs=docs)
+    page = request.args.get("page", 1, type=int)
+    pagination = Document.query.order_by(Document.uploaded_at.desc()).paginate(page=page, per_page=50, error_out=False)
+    return render_template("admin/documents.html", pagination=pagination)
 
 @admin_bp.route("/announce", methods=["GET", "POST"])
 @login_required

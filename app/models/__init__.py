@@ -28,11 +28,11 @@ def load_user(user_id):
 class StudentProfile(db.Model):
     __tablename__ = 'student_profiles'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     program = db.Column(db.String(100))
     duration_years = db.Column(db.Integer, default=2)
     current_semester = db.Column(db.Integer, default=1)
-    eri_score = db.Column(db.Float, default=0.0)
+    eri_score = db.Column(db.Float, default=0.0, index=True)
     photo_filename = db.Column(db.String(200))
     bio = db.Column(db.Text)
     skills = db.Column(db.String(500))
@@ -40,15 +40,15 @@ class StudentProfile(db.Model):
     filiere = db.Column(db.String(100))
     availability = db.Column(db.String(30), default="available_now")
     cv_file = db.Column(db.String(300))
-    is_public = db.Column(db.Boolean, default=False)
-    class_group_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))
+    is_public = db.Column(db.Boolean, default=False, index=True)
+    class_group_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'), index=True)
     user = db.relationship('User', backref=db.backref('profile', uselist=False))
     school_class = db.relationship('SchoolClass', backref='students')
 
 class SemesterResult(db.Model):
     __tablename__ = 'semester_results'
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student_profiles.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('student_profiles.id'), index=True)
     semester_number = db.Column(db.Integer)
     ca_score = db.Column(db.Float, default=0)
     exam_score = db.Column(db.Float, default=0)
@@ -72,18 +72,18 @@ class Document(db.Model):
 class AttendanceRecord(db.Model):
     __tablename__ = 'attendance_records'
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('student_profiles.id'))
-    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('student_profiles.id'), index=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     course = db.Column(db.String(100))
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
-    class_group_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'))
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), index=True)
+    class_group_id = db.Column(db.Integer, db.ForeignKey('school_classes.id'), index=True)
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(10), default='present')
+    status = db.Column(db.String(10), default='present', index=True)
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     recipient_role = db.Column(db.String(20))
     type = db.Column(db.String(50))
     title = db.Column(db.String(200))

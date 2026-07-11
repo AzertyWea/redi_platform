@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donate – SERA Foundation</title>
+  <meta name="description" content="Make a donation to SERA Foundation. Support education, food, healthcare, and community development for vulnerable children and families across Africa.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav scrolled">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-icon">S</span>
+        SERA Foundation
+      </a>
+      <div class="nav__links">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="about.html" class="nav__link">About Us</a>
+        <a href="projects.html" class="nav__link">Projects</a>
+        <a href="donate.html" class="nav__link active">Donate</a>
+        <a href="stories.html" class="nav__link">Stories</a>
+        <a href="contact.html" class="nav__link">Contact</a>
+      </div>
+      <div class="nav__actions">
+        <button class="theme-toggle theme-toggle-desktop" aria-label="Toggle dark mode">&#9790;</button>
+        <a href="donate.html" class="btn btn--gold btn--sm nav__btn-desktop">Donate Now</a>
+        <button class="nav__hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="nav__mobile">
+    <a href="index.html" class="nav__link">Home</a>
+    <a href="about.html" class="nav__link">About Us</a>
+    <a href="projects.html" class="nav__link">Projects</a>
+    <a href="donate.html" class="nav__link active">Donate</a>
+    <a href="stories.html" class="nav__link">Stories</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <button class="theme-toggle" aria-label="Toggle dark mode">&#9790;</button>
+    <a href="donate.html" class="btn btn--gold">Donate Now</a>
+  </div>
+
+  <!-- Page Hero -->
+  <section class="donate-hero">
+    <div class="container">
+      <div class="page-hero__breadcrumb">
+        <a href="index.html">Home</a> <span>/</span> <span>Donate</span>
+      </div>
+      <h1>Your Donation Can Change a Life</h1>
+      <p style="margin-top:1rem;">Every contribution, no matter the size, helps us provide education, food, healthcare, and hope to thousands of children and families across Africa.</p>
+    </div>
+  </section>
+
+  <!-- Donation Amounts -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">Make a Difference</span>
+        <h2 class="section-title">Choose Your Donation Amount</h2>
+        <p class="section-subtitle">Select a suggested amount or enter a custom donation. 100% of your contribution goes directly to our programs.</p>
+      </div>
+      <div class="donate-amounts reveal">
+        <button class="donate-amount">
+          <strong>$25</strong>
+          <span>School supplies for 1 child</span>
+        </button>
+        <button class="donate-amount active">
+          <strong>$50</strong>
+          <span>Feed a family for 1 month</span>
+        </button>
+        <button class="donate-amount">
+          <strong>$100</strong>
+          <span>Medical care for 5 children</span>
+        </button>
+        <button class="donate-amount">
+          <strong>$250</strong>
+          <span>Sponsor a child for 1 year</span>
+        </button>
+      </div>
+      <div class="donate-custom reveal">
+        <span class="donate-custom__prefix">$</span>
+        <input type="number" placeholder="Enter custom amount" min="1">
+      </div>
+      <div class="text-center reveal" style="margin-top:2rem;">
+        <a href="#" class="btn btn--gold btn--lg" onclick="alert('Thank you for your generosity! Online payment integration coming soon.'); return false;">Donate Now</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Payment Methods -->
+  <section class="section section--alt">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">Payment Methods</span>
+        <h2 class="section-title">How to Send Your Donation</h2>
+        <p class="section-subtitle">We offer multiple secure payment options for both local and international donors.</p>
+      </div>
+      <div class="payment-methods">
+        <!-- Mobile Money -->
+        <div class="payment-method reveal reveal-delay-1">
+          <h3>
+            <span class="payment-method__icon payment-method__icon--orange">M</span>
+            Mobile Money
+          </h3>
+          <ul>
+            <li><span>Orange Money</span><span>+221 77 123 45 67</span></li>
+            <li><span>MTN Mobile Money</span><span>+221 78 987 65 43</span></li>
+            <li><span>Reference</span><span>SERA + Your Name</span></li>
+            <li><span>Confirmation</span><span>Instant via SMS</span></li>
+          </ul>
+        </div>
+
+        <!-- Bank Transfer -->
+        <div class="payment-method reveal reveal-delay-2">
+          <h3>
+            <span class="payment-method__icon payment-method__icon--bank">B</span>
+            Bank Transfer
+          </h3>
+          <ul>
+            <li><span>Bank Name</span><span>Bank of Africa (BOA)</span></li>
+            <li><span>Account Name</span><span>SERA Foundation</span></li>
+            <li><span>Account Number</span><span>012 345 678 901</span></li>
+            <li><span>SWIFT Code</span><span>AFRI SF DA</span></li>
+            <li><span>IBAN</span><span>SN58 SN01 2345 6789 0123 4567 8901</span></li>
+          </ul>
+        </div>
+
+        <!-- International Transfer -->
+        <div class="payment-method reveal reveal-delay-3">
+          <h3>
+            <span class="payment-method__icon payment-method__icon--mtn">W</span>
+            International Transfer
+          </h3>
+          <ul>
+            <li><span>Bank Name</span><span>Bank of Africa (BOA)</span></li>
+            <li><span>SWIFT/BIC</span><span>AFRI SF DA</span></li>
+            <li><span>Correspondent Bank</span><span>BNP Paribas</span></li>
+            <li><span>Currency</span><span>USD / EUR / XOF</span></li>
+            <li><span>Processing</span><span>2-5 business days</span></li>
+          </ul>
+        </div>
+
+        <!-- Online (Future) -->
+        <div class="payment-method reveal reveal-delay-4">
+          <h3>
+            <span class="payment-method__icon payment-method__icon--card">C</span>
+            Online Payment
+          </h3>
+          <ul>
+            <li><span>Visa / Mastercard</span><span style="color:var(--gold-500)">Coming Soon</span></li>
+            <li><span>PayPal</span><span style="color:var(--gold-500)">Coming Soon</span></li>
+            <li><span>Stripe</span><span style="color:var(--gold-500)">Coming Soon</span></li>
+            <li><span>Security</span><span>SSL Encrypted</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Transparency -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">Transparency</span>
+        <h2 class="section-title">How Your Donation Is Used</h2>
+        <p class="section-subtitle">We are committed to full transparency. Here is exactly how every dollar is allocated across our programs.</p>
+      </div>
+      <div style="max-width:700px; margin:0 auto;" class="reveal">
+        <div class="transparency-bar">
+          <div class="transparency-bar__segment transparency-bar__segment--edu" style="width:40%"></div>
+          <div class="transparency-bar__segment transparency-bar__segment--food" style="width:25%"></div>
+          <div class="transparency-bar__segment transparency-bar__segment--health" style="width:20%"></div>
+          <div class="transparency-bar__segment transparency-bar__segment--community" style="width:15%"></div>
+        </div>
+        <div class="transparency-legend">
+          <div class="transparency-legend__item">
+            <div class="transparency-legend__dot" style="background:var(--green-600)"></div>
+            <span><strong>40%</strong> Education Programs</span>
+          </div>
+          <div class="transparency-legend__item">
+            <div class="transparency-legend__dot" style="background:var(--gold-500)"></div>
+            <span><strong>25%</strong> Food Assistance</span>
+          </div>
+          <div class="transparency-legend__item">
+            <div class="transparency-legend__dot" style="background:var(--earth-500)"></div>
+            <span><strong>20%</strong> Healthcare Services</span>
+          </div>
+          <div class="transparency-legend__item">
+            <div class="transparency-legend__dot" style="background:#5c6bc0"></div>
+            <span><strong>15%</strong> Community Projects</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid-4 reveal" style="margin-top:3rem;">
+        <div class="value-card">
+          <div class="value-card__icon">&#127891;</div>
+          <h3 style="font-size:2rem; color:var(--green-700);">40%</h3>
+          <p>Education — School construction, scholarships, uniforms, books, and teacher training programs.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon">&#127828;</div>
+          <h3 style="font-size:2rem; color:var(--gold-500);">25%</h3>
+          <p>Food — Emergency food relief, nutrition programs, and community feeding initiatives.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon">&#9764;</div>
+          <h3 style="font-size:2rem; color:var(--earth-500);">20%</h3>
+          <p>Healthcare — Mobile clinics, medication, health camps, and maternal care services.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon">&#127959;</div>
+          <h3 style="font-size:2rem; color:#5c6bc0;">15%</h3>
+          <p>Community — Clean water wells, sanitation facilities, and infrastructure development.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Section -->
+  <section class="section section--alt">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label">Our Promise</span>
+        <h2 class="section-title">Why You Can Trust Us</h2>
+      </div>
+      <div class="grid-3" style="margin-top:2rem;">
+        <div class="value-card reveal reveal-delay-1">
+          <div class="value-card__icon">&#128220;</div>
+          <h3>Registered Organization</h3>
+          <p>SERA Foundation is a legally registered non-profit with full government authorization to receive and manage charitable donations.</p>
+        </div>
+        <div class="value-card reveal reveal-delay-2">
+          <div class="value-card__icon">&#128202;</div>
+          <h3>Annual Reports</h3>
+          <p>We publish detailed annual financial reports showing exactly how funds are raised and spent across all our programs.</p>
+        </div>
+        <div class="value-card reveal reveal-delay-3">
+          <div class="value-card__icon">&#128245;</div>
+          <h3>On-Ground Verification</h3>
+          <p>Donors are welcome to visit our projects and verify the impact of their contributions at any time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <div class="cta-banner__bg"></div>
+        <div class="cta-banner__content">
+          <h2>Ready to Change a Life?</h2>
+          <p>Your generosity today creates a ripple effect that transforms entire communities for generations to come.</p>
+          <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="#top" class="btn btn--gold btn--lg" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Choose Amount & Donate</a>
+            <a href="contact.html" class="btn btn--outline btn--lg">Have Questions? Contact Us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <a href="index.html" class="footer__logo">
+            <span class="footer__logo-icon">S</span>
+            SERA Foundation
+          </a>
+          <p class="footer__desc">A registered non-profit humanitarian organization dedicated to supporting vulnerable communities, orphaned children, and underserved families across Africa through education, healthcare, and sustainable development.</p>
+          <a href="donate.html" class="btn btn--gold btn--sm footer__donate-btn">Donate Now</a>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <div class="footer__links">
+            <a href="index.html" class="footer__link">Home</a>
+            <a href="about.html" class="footer__link">About Us</a>
+            <a href="projects.html" class="footer__link">Our Projects</a>
+            <a href="donate.html" class="footer__link">Donate</a>
+            <a href="stories.html" class="footer__link">Success Stories</a>
+            <a href="contact.html" class="footer__link">Contact Us</a>
+          </div>
+        </div>
+        <div>
+          <h4>Programs</h4>
+          <div class="footer__links">
+            <a href="projects.html" class="footer__link">Education Support</a>
+            <a href="projects.html" class="footer__link">Orphan Care</a>
+            <a href="projects.html" class="footer__link">Food Distribution</a>
+            <a href="projects.html" class="footer__link">Healthcare Assistance</a>
+            <a href="projects.html" class="footer__link">Youth Empowerment</a>
+          </div>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <div class="footer__links">
+            <a href="tel:+221771234567" class="footer__link">+221 77 123 45 67</a>
+            <a href="mailto:info@serafoundation.org" class="footer__link">info@serafoundation.org</a>
+            <span class="footer__link">Dakar, Senegal</span>
+          </div>
+          <div class="footer__socials" style="margin-top:1rem;">
+            <a href="#" class="footer__social" aria-label="Facebook">f</a>
+            <a href="#" class="footer__social" aria-label="Twitter">X</a>
+            <a href="#" class="footer__social" aria-label="Instagram">&#9679;</a>
+            <a href="#" class="footer__social" aria-label="YouTube">&#9654;</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>&copy; 2026 SERA Foundation. All rights reserved.</span>
+        <div class="footer__bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" aria-label="Back to top">&#8593;</button>
+  <script src="js/main.js"></script>
+</body>
+</html>
