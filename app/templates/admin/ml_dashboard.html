@@ -33,6 +33,7 @@
       <p style="margin-top:8px;font-size:13px;color:#6B7280">Students must have semester results and activity data before training.</p>
       {% endif %}
       <form method="POST" action="/admin/ml/train" style="margin-top:16px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-accent"><i class="fas fa-cogs"></i> Train / Retrain Model</button>
       </form>
     </div>
