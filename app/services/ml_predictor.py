@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from app.models import StudentProfile, SemesterResult, AttendanceRecord, Internship, Certification, Project, AssignmentSubmission, QuizResult, TeacherObservation, EmployerFeedback, PredictionResult
 from app import db
@@ -168,36 +168,28 @@ def train():
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    cv = StratifiedKFold(n_splits=min(5, np.bincount(y).min()), shuffle=True, random_state=42)
-    cv_metrics = {"accuracy": [], "precision": [], "recall": [], "f1": [], "auc": []}
+    n_folds = min(5, np.bincount(y).min())
+    if n_folds < 2:
+        n_folds = 2
 
-    for train_idx, _ in cv.split(X_scaled, y):
-        X_fold, y_fold = X_scaled[train_idx], y[train_idx]
-
-        # Use all data for training on first fold
-        fold_model = RandomForestClassifier(
-            n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"
-        )
-        fold_model.fit(X_fold, y_fold)
-
-        y_fold_pred = fold_model.predict(X_fold)
-        y_fold_prob = fold_model.predict_proba(X_fold)[:, 1]
-
-        cv_metrics["accuracy"].append(accuracy_score(y_fold, y_fold_pred))
-        cv_metrics["precision"].append(precision_score(y_fold, y_fold_pred, zero_division=0))
-        cv_metrics["recall"].append(recall_score(y_fold, y_fold_pred, zero_division=0))
-        cv_metrics["f1"].append(f1_score(y_fold, y_fold_pred, zero_division=0))
-        try:
-            cv_metrics["auc"].append(roc_auc_score(y_fold, y_fold_prob))
-        except Exception:
-            cv_metrics["auc"].append(0)
+    cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
 
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42, stratify=y)
 
-    model = RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=42, class_weight="balanced"
+    param_grid = {
+        "n_estimators": [100, 200, 300],
+        "max_depth": [10, 15, None],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4]
+    }
+
+    base_model = RandomForestClassifier(random_state=42, class_weight="balanced")
+    grid = GridSearchCV(
+        base_model, param_grid, cv=cv, scoring="f1", n_jobs=-1, verbose=0
     )
-    model.fit(X_train, y_train)
+    grid.fit(X_train, y_train)
+
+    model = grid.best_estimator_
 
     with open(MODEL_PATH, "wb") as f:
         pickle.dump(model, f)
@@ -223,6 +215,9 @@ def train():
 
     train_acc = accuracy_score(y_train, model.predict(X_train))
 
+    cv_results = grid.cv_results_
+    cv_acc = float(np.mean([cv_results[f"split{i}_test_score"][grid.best_index_] for i in range(n_folds)]))
+
     return {
         "accuracy": round(acc, 3),
         "precision": round(prec, 3),
@@ -235,8 +230,8 @@ def train():
         "class_1": int(np.sum(y == 1)),
         "top_features": top_features,
         "train_accuracy": round(train_acc, 3),
-        "cv_accuracy": round(float(np.mean(cv_metrics["accuracy"])), 3),
-        "cv_f1": round(float(np.mean(cv_metrics["f1"])), 3),
+        "cv_f1": round(float(grid.best_score_), 3),
+        "best_params": grid.best_params_,
         "model_version": "v3",
         "n_features": 16
     }

@@ -467,8 +467,9 @@ def ml_train():
         flash(result["error"], "danger")
     else:
         count = predict_all()
-        cv_msg = f" | CV Acc: {result.get('cv_accuracy', 'N/A')}, CV F1: {result.get('cv_f1', 'N/A')}" if 'cv_accuracy' in result else ""
-        flash(f"Model v2 trained! Test Acc: {result['accuracy']}, F1: {result['f1_score']}{cv_msg} | {count} students predicted.", "success")
+        params = result.get("best_params", {})
+        param_str = ", ".join(f"{k}={v}" for k, v in params.items()) if params else ""
+        flash(f"Model v3 trained! Test Acc: {result['accuracy']}, F1: {result['f1_score']}, CV F1: {result.get('cv_f1', 'N/A')} | Best: {param_str} | {count} students predicted.", "success")
     return redirect(url_for("admin.ml_dashboard"))
 
 @admin_bp.route("/audit-log")
