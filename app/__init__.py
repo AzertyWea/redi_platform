@@ -61,8 +61,10 @@ def create_app():
     from app.routes.employer import employer_bp
     from app.routes.ai_upload import ai_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.social import social_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(social_bp)
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(teacher_bp, url_prefix='/teacher')
     app.register_blueprint(admin_bp, url_prefix='/admin')

@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/feed" class="active"><i class="fas fa-home"></i> Feed</a>
+<a href="/feed?type=network"><i class="fas fa-users"></i> My Network</a>
+<a href="/feed?type=resources"><i class="fas fa-book"></i> Resources</a>
+{% if current_user.role == 'student' %}
+<div class="sidebar-divider"></div>
+<div class="menu-label">Student</div>
+<a href="/student/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> Career Passport</a>
+<a href="/student/messages"><i class="fas fa-comments"></i> Messages</a>
+{% elif current_user.role == 'teacher' %}
+<div class="sidebar-divider"></div>
+<div class="menu-label">Teacher</div>
+<a href="/teacher/dashboard"><i class="fas fa-chalkboard"></i> Dashboard</a>
+{% elif current_user.role == 'employer' %}
+<div class="sidebar-divider"></div>
+<div class="menu-label">Employer</div>
+<a href="/employer/dashboard"><i class="fas fa-building"></i> Dashboard</a>
+<a href="/employer/students"><i class="fas fa-search"></i> Talent Search</a>
+{% elif current_user.role == 'admin' %}
+<div class="sidebar-divider"></div>
+<div class="menu-label">Admin</div>
+<a href="/admin/dashboard"><i class="fas fa-cog"></i> Dashboard</a>
+{% endif %}
+{% endblock %}
+{% block page_title %}Community Feed{% endblock %}
+{% block content %}
+
+<div class="two-col" style="grid-template-columns:1fr 300px">
+  <div>
+    <!-- Create Post -->
+    <div class="corp-panel">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="corp-avatar" style="width:40px;height:40px;font-size:14px;flex-shrink:0">{{ current_user.name[0] }}</div>
+        <div style="flex:1">
+          <form method="POST" action="/feed/post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="content" rows="2" placeholder="Share something with the community..." style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:var(--font-main);outline:none;resize:none;transition:var(--transition)" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'" required></textarea>
+            <div id="resourceFields" style="display:none;margin-top:8px">
+              <input type="text" name="resource_title" placeholder="Resource title" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;margin-bottom:6px;outline:none;font-family:var(--font-main)">
+              <input type="url" name="resource_url" placeholder="Resource URL (optional)" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;outline:none;font-family:var(--font-main)">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <button type="submit" name="post_type" value="post" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Post</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="toggleResource()"><i class="fas fa-link"></i> Share Resource</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <a href="/feed" class="btn btn-sm {{ 'btn-primary' if filter_type == 'all' else 'btn-outline' }}"><i class="fas fa-stream"></i> All</a>
+      <a href="/feed?type=network" class="btn btn-sm {{ 'btn-primary' if filter_type == 'network' else 'btn-outline' }}"><i class="fas fa-users"></i> My Network</a>
+      <a href="/feed?type=resources" class="btn btn-sm {{ 'btn-primary' if filter_type == 'resources' else 'btn-outline' }}"><i class="fas fa-book"></i> Resources</a>
+    </div>
+
+    <!-- Posts -->
+    {% for p in posts.items %}
+    <div class="corp-panel" id="post-{{ p.id }}" style="animation:fadeIn .3s ease">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="corp-avatar" style="width:40px;height:40px;font-size:14px;flex-shrink:0">{{ p.user.name[0] }}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-weight:600;font-size:13px;color:var(--text)">{{ p.user.name }}</span>
+            <span class="corp-pill neutral" style="font-size:9px">{{ p.user.role|capitalize }}</span>
+            {% if p.post_type == 'resource' %}<span class="corp-pill positive" style="font-size:9px"><i class="fas fa-link"></i> Resource</span>{% endif %}
+            <span style="font-size:11px;color:var(--text-secondary);margin-left:auto">{{ p.created_at.strftime('%d %b %Y') }}</span>
+          </div>
+          <div style="margin-top:8px;font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">{{ p.content }}</div>
+          {% if p.post_type == 'resource' and p.resource_title %}
+          <a href="{{ p.resource_url or '#' }}" target="_blank" style="display:block;margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);transition:var(--transition);text-decoration:none">
+            <div style="font-size:12px;color:var(--text-secondary)"><i class="fas fa-link" style="color:var(--primary)"></i> {{ p.resource_title }}</div>
+            {% if p.resource_url %}<div style="font-size:11px;color:var(--primary);margin-top:2px">{{ p.resource_url }}</div>{% endif %}
+          </a>
+          {% endif %}
+        </div>
+        {% if p.user_id == current_user.id %}
+        <form method="POST" action="/feed/delete/{{ p.id }}" onsubmit="return confirm('Delete this post?')" style="flex-shrink:0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:12px;color:var(--text-secondary)"><i class="fas fa-times"></i></button>
+        </form>
+        {% endif %}
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost btn-sm like-btn" data-post-id="{{ p.id }}" style="color:{{ '#1D7A46' if p.is_liked else 'var(--text-secondary)' }};font-weight:{{ '600' if p.is_liked else '400' }}">
+          <i class="fas fa-{{ 'thumbs-up' if p.is_liked else 'thumbs-up' }}" style="color:{{ '#1D7A46' if p.is_liked else 'inherit' }}"></i>
+          <span class="like-count">{{ p.like_count }}</span> Like{{ '' if p.like_count == 1 else 's' }}
+        </button>
+        <button class="btn btn-ghost btn-sm comment-toggle" data-post-id="{{ p.id }}" style="color:var(--text-secondary)">
+          <i class="fas fa-comment"></i> <span class="comment-count">{{ p.comment_count }}</span> Comment{{ '' if p.comment_count == 1 else 's' }}
+        </button>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section" id="comments-{{ p.id }}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="comments-list" id="comments-list-{{ p.id }}">
+          {% for c in p.comments_list %}
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <div class="corp-avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">{{ c.user.name[0] }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="background:var(--bg);padding:8px 12px;border-radius:8px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                  <span style="font-weight:600;font-size:11px;color:var(--text)">{{ c.user.name }}</span>
+                  <span class="corp-pill neutral" style="font-size:8px">{{ c.user.role|capitalize }}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text)">{{ c.content }}</div>
+              </div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;padding-left:4px">{{ c.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if p.comment_count > 3 %}
+        <button class="btn btn-ghost btn-sm load-more-comments" data-post-id="{{ p.id }}" style="font-size:11px;color:var(--primary);margin-bottom:8px">View all {{ p.comment_count }} comments</button>
+        {% endif %}
+        <form class="comment-form" data-post-id="{{ p.id }}" style="display:flex;gap:8px">
+          <input type="text" placeholder="Write a comment..." style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;outline:none;font-family:var(--font-main)">
+          <button type="submit" class="btn btn-primary btn-sm" style="border-radius:50%;width:32px;height:32px;padding:0"><i class="fas fa-paper-plane" style="font-size:11px"></i></button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="corp-panel" style="text-align:center;padding:40px">
+      <i class="fas fa-newspaper" style="font-size:3rem;color:var(--text-secondary);opacity:0.2;margin-bottom:12px"></i>
+      <h3 style="font-family:var(--font-head);font-size:16px;color:var(--text);margin-bottom:6px">No posts yet</h3>
+      <p style="font-size:13px;color:var(--text-secondary)">Be the first to share something with the community!</p>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if posts.pages > 1 %}
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+      {% if posts.has_prev %}
+      <a href="/feed?page={{ posts.prev_num }}&type={{ filter_type }}" class="btn btn-outline btn-sm"><i class="fas fa-chevron-left"></i> Previous</a>
+      {% endif %}
+      <span style="padding:8px 12px;font-size:13px;color:var(--text-secondary)">Page {{ posts.page }} of {{ posts.pages }}</span>
+      {% if posts.has_next %}
+      <a href="/feed?page={{ posts.next_num }}&type={{ filter_type }}" class="btn btn-outline btn-sm">Next <i class="fas fa-chevron-right"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="corp-panel">
+      <div class="corp-panel-head"><h3><i class="fas fa-user"></i> Your Profile</h3></div>
+      <div style="text-align:center;padding:8px 0">
+        <div class="corp-avatar" style="width:56px;height:56px;font-size:22px;margin:0 auto">{{ current_user.name[0] }}</div>
+        <div style="font-weight:700;font-size:15px;color:var(--text);margin-top:8px">{{ current_user.name }}</div>
+        <div style="font-size:11px;color:var(--text-secondary)">{{ current_user.role|capitalize }} &middot; {{ current_user.matricule }}</div>
+        {% if current_user.role == 'student' and current_user.profile %}
+        <div style="margin-top:8px">
+          <span class="corp-pill {{ 'positive' if (current_user.profile.eri_score or 0) >= 70 else 'neutral' }}">ERI: {{ current_user.profile.eri_score or 0 }}%</span>
+        </div>
+        {% endif %}
+      </div>
+      <div style="display:flex;gap:0;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--text)">{{ following_count }}</div>
+          <div style="font-size:10px;color:var(--text-secondary)">Following</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--text)">{{ followers_count }}</div>
+          <div style="font-size:10px;color:var(--text-secondary)">Followers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="corp-panel">
+      <div class="corp-panel-head"><h3><i class="fas fa-users"></i> Suggested to Follow</h3></div>
+      <div class="corp-row-list">
+        {% for u in suggested_users %}
+        <div class="corp-row-item">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <div class="corp-avatar" style="width:32px;height:32px;font-size:11px;flex-shrink:0">{{ u.name[0] }}</div>
+            <div style="min-width:0">
+              <div class="corp-row-title" style="font-size:12px">{{ u.name }}</div>
+              <div class="corp-row-sub" style="font-size:10px">{{ u.role|capitalize }}</div>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm follow-btn" data-user-id="{{ u.id }}" style="font-size:10px;flex-shrink:0">+ Follow</button>
+        </div>
+        {% else %}
+        <p style="font-size:12px;color:var(--text-secondary);text-align:center;padding:12px 0">No suggestions right now.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleResource() {
+  const f = document.getElementById('resourceFields');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function getCSRF() {
+  const el = document.querySelector('[name=csrf_token]');
+  return el ? el.value : '';
+}
+
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const postId = this.dataset.postId;
+    fetch('/feed/like/' + postId, { method: 'POST', headers: {'X-CSRFToken': getCSRF()} })
+      .then(r => r.json()).then(d => {
+        this.querySelector('.like-count').textContent = d.count;
+        this.style.color = d.liked ? '#1D7A46' : 'var(--text-secondary)';
+        this.style.fontWeight = d.liked ? '600' : '400';
+      });
+  });
+});
+
+document.querySelectorAll('.comment-toggle').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const section = document.getElementById('comments-' + this.dataset.postId);
+    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+  });
+});
+
+document.querySelectorAll('.comment-form').forEach(form => {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const postId = this.dataset.postId;
+    const input = this.querySelector('input');
+    const content = input.value.trim();
+    if (!content) return;
+    fetch('/feed/comment/' + postId, {
+      method: 'POST',
+      headers: {'X-CSRFToken': getCSRF(), 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'content=' + encodeURIComponent(content)
+    }).then(r => r.json()).then(d => {
+      if (d.error) return;
+      const list = document.getElementById('comments-list-' + postId);
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;gap:8px;margin-bottom:10px';
+      div.innerHTML = '<div class="corp-avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">' + d.user[0] + '</div><div style="flex:1;min-width:0"><div style="background:var(--bg);padding:8px 12px;border-radius:8px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:600;font-size:11px;color:var(--text)">' + d.user + '</span><span class="corp-pill neutral" style="font-size:8px">' + d.user_role + '</span></div><div style="font-size:12px;color:var(--text)">' + d.content + '</div></div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;padding-left:4px">' + d.time + '</div></div>';
+      list.appendChild(div);
+      input.value = '';
+      const toggle = document.querySelector('.comment-toggle[data-post-id="' + postId + '"]');
+      if (toggle) toggle.querySelector('.comment-count').textContent = d.count;
+    });
+  });
+});
+
+document.querySelectorAll('.follow-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const userId = this.dataset.userId;
+    fetch('/feed/follow/' + userId, { method: 'POST', headers: {'X-CSRFToken': getCSRF()} })
+      .then(r => r.json()).then(d => {
+        if (d.following) {
+          this.textContent = 'Following';
+          this.classList.remove('btn-outline');
+          this.classList.add('btn-primary');
+        }
+      });
+  });
+});
+</script>
+{% endblock %}

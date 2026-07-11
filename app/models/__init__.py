@@ -327,6 +327,38 @@ class PredictionResult(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     student = db.relationship("StudentProfile", backref="prediction")
 
+class SocialPost(db.Model):
+    __tablename__ = "social_posts"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    media_url = db.Column(db.String(500))
+    post_type = db.Column(db.String(20), default="post")
+    resource_title = db.Column(db.String(200))
+    resource_url = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship("User", backref="social_posts")
+
+class SocialLike(db.Model):
+    __tablename__ = "social_likes"
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("social_posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship("SocialPost", backref="likes")
+    user = db.relationship("User", backref="social_likes")
+    __table_args__ = (db.UniqueConstraint("post_id", "user_id"),)
+
+class SocialComment(db.Model):
+    __tablename__ = "social_comments"
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("social_posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    post = db.relationship("SocialPost", backref="comments")
+    user = db.relationship("User", backref="social_comments")
+
 class Follow(db.Model):
     __tablename__ = "follows"
     id = db.Column(db.Integer, primary_key=True)
