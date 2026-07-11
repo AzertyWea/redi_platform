@@ -450,7 +450,7 @@ def bulk_import_confirm():
 @login_required
 @admin_required
 def ml_dashboard():
-    from app.services.ml_predictor import get_stats, train as retrain
+    from app.services.ml_predictor import get_stats
     from app.models import PredictionResult
     stats = get_stats()
     has_model = os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "ml_models", "redi_classifier.pkl"))
@@ -467,7 +467,8 @@ def ml_train():
         flash(result["error"], "danger")
     else:
         count = predict_all()
-        flash(f"Model trained! Acc: {result['accuracy']}, F1: {result['f1_score']}, {count} students predicted.", "success")
+        cv_msg = f" | CV Acc: {result.get('cv_accuracy', 'N/A')}, CV F1: {result.get('cv_f1', 'N/A')}" if 'cv_accuracy' in result else ""
+        flash(f"Model v2 trained! Test Acc: {result['accuracy']}, F1: {result['f1_score']}{cv_msg} | {count} students predicted.", "success")
     return redirect(url_for("admin.ml_dashboard"))
 
 @admin_bp.route("/audit-log")
