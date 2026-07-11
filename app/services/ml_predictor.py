@@ -16,9 +16,10 @@ SCALER_PATH = os.path.join(MODEL_DIR, "redi_scaler.pkl")
 REDI_THRESHOLD = 70
 
 FEATURE_NAMES = [
-    "Academic Avg", "Attendance Rate", "Internships", "Certifications",
-    "Projects", "Assignment Score", "Quiz Score", "Teacher Observation",
-    "Employer Feedback", "Semester Progress"
+    "Academic Avg", "Academic Std", "Grade Trend", "CA Average", "Exam Average",
+    "Attendance Rate", "Internships", "Certifications",
+    "Projects", "Assignment Score", "Assignment Count", "Quiz Score",
+    "Teacher Observation", "Employer Feedback", "Skills Count", "Semester Progress"
 ]
 
 _model_instance = None
@@ -26,17 +27,21 @@ _scaler_instance = None
 
 def _batch_features(student_ids):
     if not student_ids:
-        return defaultdict(lambda: [0]*10)
+        return defaultdict(lambda: [0]*16)
     ids_set = set(student_ids)
     sid_list = list(ids_set)
 
-    sp_map = {s.id: (s.duration_years or 2, s.current_semester or 1)
+    sp_map = {s.id: (s.duration_years or 2, s.current_semester or 1, s.skills or "")
               for s in StudentProfile.query.filter(StudentProfile.id.in_(sid_list)).all()}
 
     sem_rows = SemesterResult.query.filter(SemesterResult.student_id.in_(sid_list)).all()
     acad_map = defaultdict(list)
+    ca_map = defaultdict(list)
+    exam_map = defaultdict(list)
     for r in sem_rows:
-        acad_map[r.student_id].append(r.overall_score)
+        acad_map[r.student_id].append((r.semester_number or 0, r.overall_score or 0))
+        ca_map[r.student_id].append(r.ca_score or 0)
+        exam_map[r.student_id].append(r.exam_score or 0)
 
     att_rows = db.session.query(
         AttendanceRecord.student_id, AttendanceRecord.status
@@ -83,9 +88,26 @@ def _batch_features(student_ids):
 
     features = {}
     for sid in ids_set:
-        dur, cur_sem = sp_map.get(sid, (2, 1))
-        scores = acad_map.get(sid, [])
-        academic = sum(scores) / len(scores) if scores else 0
+        dur, cur_sem, skills_str = sp_map.get(sid, (2, 1, ""))
+
+        sem_scores = acad_map.get(sid, [])
+        scores_only = [s for _, s in sem_scores]
+        academic = sum(scores_only) / len(scores_only) if scores_only else 0
+        academic_std = float(np.std(scores_only)) if len(scores_only) > 1 else 0
+
+        sorted_sems = sorted(sem_scores, key=lambda x: x[0])
+        if len(sorted_sems) >= 2:
+            x_vals = np.array([s[0] for s in sorted_sems], dtype=float)
+            y_vals = np.array([s[1] for s in sorted_sems], dtype=float)
+            slope = np.polyfit(x_vals, y_vals, 1)[0]
+        else:
+            slope = 0
+
+        ca_scores = ca_map.get(sid, [])
+        ca_avg = sum(ca_scores) / len(ca_scores) if ca_scores else 0
+
+        exam_scores = exam_map.get(sid, [])
+        exam_avg = sum(exam_scores) / len(exam_scores) if exam_scores else 0
 
         att = att_map.get(sid, {"total": 0, "present": 0})
         att_rate = (att["present"] / att["total"] * 100) if att["total"] else 0
@@ -96,6 +118,7 @@ def _batch_features(student_ids):
 
         sc = assign_map.get(sid, [])
         assign_score = sum(sc) / len(sc) if sc else 0
+        n_assignments = len(sc)
 
         qz = quiz_map.get(sid, [])
         quiz_score = (sum(qz) / len(qz) * 100) if qz else 0
@@ -106,11 +129,15 @@ def _batch_features(student_ids):
         fb_scores = fb_map.get(sid, [])
         fb_avg = sum(fb_scores) / len(fb_scores) if fb_scores else 0
 
+        n_skills = len([s for s in skills_str.split(",") if s.strip()]) if skills_str else 0
+
         total_sems = dur * 2
         sem_progress = cur_sem / total_sems
 
-        features[sid] = [academic, att_rate, n_internships, n_certs, n_projects,
-                         assign_score, quiz_score, obs_avg, fb_avg, sem_progress]
+        features[sid] = [academic, academic_std, slope, ca_avg, exam_avg,
+                         att_rate, n_internships, n_certs, n_projects,
+                         assign_score, n_assignments, quiz_score,
+                         obs_avg, fb_avg, n_skills, sem_progress]
 
     return features
 
@@ -129,7 +156,7 @@ def build_training_data():
         if s.id not in semester_has:
             continue
         label = 1 if (s.eri_score or 0) >= REDI_THRESHOLD else 0
-        X.append(feat_map.get(s.id, [0]*10))
+        X.append(feat_map.get(s.id, [0]*16))
         y.append(label)
     return np.array(X), np.array(y)
 
@@ -210,7 +237,8 @@ def train():
         "train_accuracy": round(train_acc, 3),
         "cv_accuracy": round(float(np.mean(cv_metrics["accuracy"])), 3),
         "cv_f1": round(float(np.mean(cv_metrics["f1"])), 3),
-        "model_version": "v2"
+        "model_version": "v3",
+        "n_features": 16
     }
 
 def _load_model():
@@ -224,7 +252,7 @@ def _load_model():
             _scaler_instance = pickle.load(f)
     return _model_instance, _scaler_instance
 
-def predict(student_profile, model_version="v2"):
+def predict(student_profile, model_version="v3"):
     model, scaler = _load_model()
     if model is None:
         return {"probability": 0, "prediction": False, "error": "Model not trained yet"}
@@ -274,7 +302,7 @@ def predict_all():
     top_idx = np.argsort(importances)[::-1][:3]
     top_factors = [FEATURE_NAMES[i] for i in top_idx]
     count = 0
-    feat_array = np.array([feat_map.get(sid, [0]*10) for sid in sids])
+    feat_array = np.array([feat_map.get(sid, [0]*16) for sid in sids])
     if len(feat_array) == 0:
         return 0
     feat_scaled = scaler.transform(feat_array)
@@ -283,8 +311,8 @@ def predict_all():
 
     for s, prob, pred in zip(students, probs, preds):
         try:
-            _save_prediction(s, prob, bool(pred), "v2",
-                             feat_map.get(s.id, [0]*10), top_factors)
+            _save_prediction(s, prob, bool(pred), "v3",
+                             feat_map.get(s.id, [0]*16), top_factors)
             count += 1
         except Exception:
             continue
