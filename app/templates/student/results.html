@@ -36,12 +36,15 @@
       <tr><td>Internship / Field Work</td><td><strong>{{ r.internship_score if r.internship_score > 0 else 'N/A' }}</strong></td><td>5%</td><td><span class="badge {{ 'badge-success' if r.internship_score > 0 else 'badge-warning' }}">{{ 'Done' if r.internship_score > 0 else 'Pending' }}</span></td></tr>
     </tbody>
   </table>
-  <div style="background:#E8F8F5;border-radius:8px;padding:12px;margin-top:14px;font-size:13px;border-left:3px solid #17A589">
-    <strong>AI Recommendation:</strong>
-    {% if r.exam_score < 70 %}Focus on final exam preparation — consider study groups and past papers.{% endif %}
-    {% if r.attendance < 80 %} Attendance is below 80% — this negatively impacts your ERI score.{% endif %}
-    {% if r.internship_score == 0 %} Complete an internship to unlock the professional experience component.{% endif %}
-    {% if r.overall_score >= 80 %} Excellent semester! Add your projects to your Digital Career Passport.{% endif %}
+  <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+    <a href="/student/semester/{{ r.semester_number }}" class="btn btn-outline btn-sm"><i class="fas fa-eye"></i> View Full Semester Details</a>
+    <div style="background:#E8F8F5;border-radius:8px;padding:12px;font-size:13px;border-left:3px solid #17A589;flex:1;min-width:200px">
+      <strong>AI Recommendation:</strong>
+      {% if r.exam_score < 70 %}Focus on final exam preparation — consider study groups and past papers.{% endif %}
+      {% if r.attendance < 80 %} Attendance is below 80% — this negatively impacts your ERI score.{% endif %}
+      {% if r.internship_score == 0 %} Complete an internship to unlock the professional experience component.{% endif %}
+      {% if r.overall_score >= 80 %} Excellent semester! Add your projects to your Digital Career Passport.{% endif %}
+    </div>
   </div>
 </div>
 {% else %}

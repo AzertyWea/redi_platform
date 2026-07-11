@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<div class="menu-label">{{ _('navigation') }}</div>
+<a href="/student/dashboard"><i class="fas fa-home"></i> {{ _('dashboard') }}</a>
+<a href="/student/semester/{{ sem_number }}" class="active"><i class="fas fa-chart-bar"></i> Semester {{ sem_number }}</a>
+<a href="/student/results"><i class="fas fa-chart-bar"></i> {{ _('results') }}</a>
+<a href="/student/documents"><i class="fas fa-file-alt"></i> {{ _('documents') }}</a>
+<a href="/student/career-data"><i class="fas fa-briefcase"></i> {{ _('career_passport') }}</a>
+<div class="sidebar-divider"></div>
+<div class="menu-label">{{ _('tools') }}</div>
+<a href="/student/coach"><i class="fas fa-robot"></i> {{ _('career_coach') }}</a>
+<a href="/student/messages"><i class="fas fa-comments"></i> {{ _('messages') }}</a>
+<a href="/student/profile"><i class="fas fa-user-edit"></i> {{ _('profile') }}</a>
+<a href="/student/report/pdf"><i class="fas fa-file-pdf"></i> {{ _('download') }} PDF</a>
+{% endblock %}
+{% block page_title %}Semester {{ sem_number }} Details{% endblock %}
+{% block content %}
+
+{% set score_class = 'high' if result.overall_score >= 70 else 'mid' if result.overall_score >= 40 else 'low' %}
+
+<!-- Semester Header -->
+<div class="sem-header">
+  <div class="sem-badge {{ score_class }}">{{ result.overall_score|int }}%</div>
+  <div class="sem-info">
+    <h2>Semester {{ sem_number }} — {{ result.overall_score }}% Overall</h2>
+    <p>{{ profile.program if profile else '' }}</p>
+    <div class="sem-meta">
+      <span><i class="fas fa-user"></i> {{ current_user.name }}</span>
+      <span><i class="fas fa-hashtag"></i> {{ current_user.matricule }}</span>
+      {% if prev_result %}
+      <span><i class="fas fa-arrow-{{ 'up' if result.overall_score >= prev_result.overall_score else 'down' }}" style="color:{{ '#1D7A46' if result.overall_score >= prev_result.overall_score else '#B42318' }}"></i> {{ result.overall_score - prev_result.overall_score }}% vs S{{ prev_result.semester_number }}</span>
+      {% endif %}
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    {% if prev_result %}
+    <a href="/student/semester/{{ prev_result.semester_number }}" class="btn btn-outline btn-sm"><i class="fas fa-chevron-left"></i> S{{ prev_result.semester_number }}</a>
+    {% endif %}
+    {% if next_result %}
+    <a href="/student/semester/{{ next_result.semester_number }}" class="btn btn-outline btn-sm">S{{ next_result.semester_number }} <i class="fas fa-chevron-right"></i></a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Compare with previous semester -->
+{% if prev_result %}
+<div class="sem-compare">
+  <div class="cmp-card">
+    <div class="cmp-label">CA Score</div>
+    <div class="cmp-value">{{ result.ca_score }}%</div>
+    {% set d = result.ca_score - prev_result.ca_score %}
+    <div class="cmp-delta {{ 'up' if d >= 0 else 'down' }}">{{ '+' if d >= 0 }}{{ d }}%</div>
+  </div>
+  <div class="cmp-card">
+    <div class="cmp-label">Exam Score</div>
+    <div class="cmp-value">{{ result.exam_score }}%</div>
+    {% set d = result.exam_score - prev_result.exam_score %}
+    <div class="cmp-delta {{ 'up' if d >= 0 else 'down' }}">{{ '+' if d >= 0 }}{{ d }}%</div>
+  </div>
+  <div class="cmp-card">
+    <div class="cmp-label">Attendance</div>
+    <div class="cmp-value">{{ result.attendance }}%</div>
+    {% set d = result.attendance - prev_result.attendance %}
+    <div class="cmp-delta {{ 'up' if d >= 0 else 'down' }}">{{ '+' if d >= 0 }}{{ d }}%</div>
+  </div>
+  <div class="cmp-card">
+    <div class="cmp-label">Project Score</div>
+    <div class="cmp-value">{{ result.project_score }}%</div>
+    {% set d = result.project_score - prev_result.project_score %}
+    <div class="cmp-delta {{ 'up' if d >= 0 else 'down' }}">{{ '+' if d >= 0 }}{{ d }}%</div>
+  </div>
+  <div class="cmp-card">
+    <div class="cmp-label">Overall</div>
+    <div class="cmp-value">{{ result.overall_score }}%</div>
+    {% set d = result.overall_score - prev_result.overall_score %}
+    <div class="cmp-delta {{ 'up' if d >= 0 else 'down' }}">{{ '+' if d >= 0 }}{{ d }}%</div>
+  </div>
+</div>
+{% endif %}
+
+<section id="results">
+  <div class="corp-panel">
+    <div class="corp-panel-head">
+      <h3><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Results Breakdown</h3>
+    </div>
+    <table class="corp-table">
+      <thead><tr><th>Component</th><th class="num">Score</th><th>Weight</th><th>Status</th><th>Improvement</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Continuous Assessment (CA)</strong></td>
+          <td class="num" style="font-weight:700">{{ result.ca_score }}%</td>
+          <td>30%</td>
+          <td><span class="corp-pill {{ 'positive' if result.ca_score >= 70 else 'neutral' }}">{{ 'Good' if result.ca_score >= 70 else 'Needs Work' }}</span></td>
+          <td class="num">
+            {% if prev_result %}
+            <span style="color:{{ '#1D7A46' if result.ca_score >= prev_result.ca_score else '#B42318' }}">{{ '+' if result.ca_score >= prev_result.ca_score }}{{ (result.ca_score - prev_result.ca_score)|round(1) }}%</span>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Final Exam</strong></td>
+          <td class="num" style="font-weight:700">{{ result.exam_score }}%</td>
+          <td>50%</td>
+          <td><span class="corp-pill {{ 'positive' if result.exam_score >= 70 else 'neutral' }}">{{ 'Good' if result.exam_score >= 70 else 'Needs Work' }}</span></td>
+          <td class="num">
+            {% if prev_result %}
+            <span style="color:{{ '#1D7A46' if result.exam_score >= prev_result.exam_score else '#B42318' }}">{{ '+' if result.exam_score >= prev_result.exam_score }}{{ (result.exam_score - prev_result.exam_score)|round(1) }}%</span>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Attendance</strong></td>
+          <td class="num" style="font-weight:700">{{ result.attendance }}%</td>
+          <td>5%</td>
+          <td><span class="corp-pill {{ 'positive' if result.attendance >= 80 else 'negative' if result.attendance < 60 else 'neutral' }}">{{ 'Excellent' if result.attendance >= 80 else 'Low' if result.attendance < 60 else 'Average' }}</span></td>
+          <td class="num">
+            {% if prev_result %}
+            <span style="color:{{ '#1D7A46' if result.attendance >= prev_result.attendance else '#B42318' }}">{{ '+' if result.attendance >= prev_result.attendance }}{{ (result.attendance - prev_result.attendance)|round(1) }}%</span>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Projects &amp; Labs</strong></td>
+          <td class="num" style="font-weight:700">{{ result.project_score }}%</td>
+          <td>10%</td>
+          <td><span class="corp-pill {{ 'positive' if result.project_score >= 70 else 'neutral' }}">{{ 'Good' if result.project_score >= 70 else 'Needs Work' }}</span></td>
+          <td class="num">
+            {% if prev_result %}
+            <span style="color:{{ '#1D7A46' if result.project_score >= prev_result.project_score else '#B42318' }}">{{ '+' if result.project_score >= prev_result.project_score }}{{ (result.project_score - prev_result.project_score)|round(1) }}%</span>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Internship / Field Work</strong></td>
+          <td class="num" style="font-weight:700">{{ result.internship_score }}%</td>
+          <td>5%</td>
+          <td><span class="corp-pill {{ 'positive' if result.internship_score > 0 else 'neutral' }}">{{ 'Completed' if result.internship_score > 0 else 'Pending' }}</span></td>
+          <td class="num">-</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- AI Recommendation -->
+    <div style="background:rgba(var(--primary-rgb),0.03);border-radius:8px;padding:16px;margin-top:16px;border-left:3px solid var(--primary)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <i class="fas fa-robot" style="color:var(--primary)"></i>
+        <strong style="font-size:13px">AI Semester Recommendations</strong>
+      </div>
+      <ul style="font-size:12.5px;color:var(--text-secondary);padding-left:20px;line-height:1.8">
+        {% if result.exam_score < 70 %}
+        <li><strong>Exam Performance:</strong> Your exam score ({{ result.exam_score }}%) is below 70%. Consider joining study groups, reviewing past papers, and scheduling extra tutoring sessions.</li>
+        {% endif %}
+        {% if result.ca_score < 70 %}
+        <li><strong>Continuous Assessment:</strong> Your CA score ({{ result.ca_score }}%) needs improvement. Focus on completing assignments on time and participating more in class.</li>
+        {% endif %}
+        {% if result.attendance < 80 %}
+        <li><strong>Attendance:</strong> Your attendance rate ({{ result.attendance }}%) is below the 80% threshold. Regular attendance is crucial for maintaining your ERI score.</li>
+        {% endif %}
+        {% if result.project_score < 70 %}
+        <li><strong>Projects:</strong> Your project score ({{ result.project_score }}%) could be improved. Seek feedback early and iterate on your deliverables.</li>
+        {% endif %}
+        {% if result.internship_score == 0 %}
+        <li><strong>Internship:</strong> Complete an internship to unlock the professional experience component of your ERI score.</li>
+        {% endif %}
+        {% if result.overall_score >= 80 %}
+        <li><strong>Excellent Performance!</strong> You're doing great this semester. Consider mentoring other students and adding your projects to your Digital Career Passport.</li>
+        {% endif %}
+        {% if prev_result and result.overall_score >= prev_result.overall_score %}
+        <li><strong>Improving Trend:</strong> Your overall score increased by {{ (result.overall_score - prev_result.overall_score)|round(1) }}% compared to last semester. Keep up the good work!</li>
+        {% elif prev_result %}
+        <li><strong>Declining Trend:</strong> Your overall score dropped by {{ (prev_result.overall_score - result.overall_score)|round(1) }}% compared to last semester. Identify the areas that need attention.</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="two-col">
+  <section id="attendance">
+    <div class="corp-panel">
+      <div class="corp-panel-head">
+        <h3><i class="fas fa-calendar-check" style="color:#1D7A46"></i> Attendance Records</h3>
+        <span class="tag">{{ semester_attendance|length }} records</span>
+      </div>
+      <div class="corp-row-list" style="max-height:320px;overflow-y:auto">
+        {% set att_present = semester_attendance|selectattr('status','equalto','present')|list %}
+        {% set att_rate = (att_present|length / semester_attendance|length * 100)|round(1) if semester_attendance else 0 %}
+        <div style="display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:#1D7A46">{{ att_present|length }}</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Present</div>
+          </div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:#B42318">{{ semester_attendance|length - att_present|length }}</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Absent</div>
+          </div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--text)">{{ att_rate }}%</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Rate</div>
+          </div>
+        </div>
+        {% for a in semester_attendance %}
+        <div class="corp-row-item">
+          <div>
+            <div class="corp-row-title">{{ a.course or 'General' }}</div>
+            <div class="corp-row-sub">{{ a.date.strftime('%d %b %Y') }}{% if a.date.strftime('%H:%M') != '00:00' %} at {{ a.date.strftime('%H:%M') }}{% endif %}</div>
+          </div>
+          <span class="corp-pill {{ 'positive' if a.status == 'present' else 'negative' }}">{{ a.status|capitalize }}</span>
+        </div>
+        {% else %}
+        <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No attendance records for this semester.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="assignments">
+    <div class="corp-panel">
+      <div class="corp-panel-head">
+        <h3><i class="fas fa-tasks" style="color:#C9972B"></i> Assignments</h3>
+        <span class="tag">{{ semester_assignments|length }} submissions</span>
+      </div>
+      <div class="corp-row-list" style="max-height:320px;overflow-y:auto">
+        {% set assign_scores = semester_assignments|selectattr('score','ne',none)|list %}
+        {% set assign_avg = (assign_scores|sum(attribute='score') / assign_scores|length)|round(1) if assign_scores else 0 %}
+        <div style="display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--text)">{{ semester_assignments|length }}</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Submitted</div>
+          </div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--text)">{{ assign_avg }}/20</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Avg Score</div>
+          </div>
+        </div>
+        {% for sub in semester_assignments %}
+        <div class="corp-row-item">
+          <div>
+            <div class="corp-row-title">{{ sub.assignment.title if sub.assignment else 'Assignment' }}</div>
+            <div class="corp-row-sub">{{ sub.filename }} &middot; {{ sub.submitted_at.strftime('%d %b %Y') if sub.submitted_at else '' }}</div>
+          </div>
+          <span class="corp-pill {{ 'positive' if sub.score and sub.score >= 12 else 'neutral' if sub.score else 'negative' }}">{{ sub.score if sub.score else 'Not graded' }}</span>
+        </div>
+        {% else %}
+        <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No assignments submitted this semester.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="two-col">
+  <section id="quizzes">
+    <div class="corp-panel">
+      <div class="corp-panel-head">
+        <h3><i class="fas fa-question-circle" style="color:#B42318"></i> Quizzes</h3>
+        <span class="tag">{{ semester_quizzes|length }} attempts</span>
+      </div>
+      <div class="corp-row-list" style="max-height:320px;overflow-y:auto">
+        {% set qz_scores = semester_quizzes|selectattr('score','ne',none)|list %}
+        {% set qz_avg = (qz_scores|sum(attribute='score') / qz_scores|length)|round(1) if qz_scores else 0 %}
+        <div style="display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--text)">{{ semester_quizzes|length }}</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Attempted</div>
+          </div>
+          <div style="text-align:center;flex:1">
+            <div style="font-size:20px;font-weight:700;color:var(--text)">{{ qz_avg }}/20</div>
+            <div style="font-size:10px;color:var(--text-secondary)">Avg Score</div>
+          </div>
+        </div>
+        {% for q in semester_quizzes %}
+        <div class="corp-row-item">
+          <div>
+            <div class="corp-row-title">{{ q.quiz.title if q.quiz else 'Quiz' }}</div>
+            <div class="corp-row-sub">{{ q.completed_at.strftime('%d %b %Y') if q.completed_at else '' }} &middot; Score: {{ q.score }}/{{ q.max_score }}</div>
+          </div>
+          <span class="corp-pill {{ 'positive' if q.score and q.score/q.max_score >= 0.7 else 'neutral' }}">{{ (q.score/q.max_score*100)|round(0)|int }}%</span>
+        </div>
+        {% else %}
+        <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No quizzes attempted this semester.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="corp-panel">
+      <div class="corp-panel-head">
+        <h3><i class="fas fa-project-diagram" style="color:var(--primary)"></i> Projects</h3>
+        <span class="tag">{{ profile.projects|length }} total</span>
+      </div>
+      <div class="corp-row-list" style="max-height:320px;overflow-y:auto">
+        <div style="margin-bottom:8px;font-size:12px;color:var(--text-secondary)">All projects from your career passport:</div>
+        {% for p in profile.projects %}
+        <div class="corp-row-item">
+          <div>
+            <div class="corp-row-title">{{ p.title }}</div>
+            <div class="corp-row-sub">{{ p.technologies or 'No tech listed' }}{% if p.project_url %} &middot; <a href="{{ p.project_url }}" target="_blank" style="color:var(--primary)">View</a>{% endif %}</div>
+          </div>
+          <span class="corp-pill neutral">Project</span>
+        </div>
+        {% else %}
+        <p style="color:var(--corp-ink-soft);font-size:12.5px;text-align:center;padding:20px 0">No projects yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Semester Navigation -->
+<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px">
+  {% if prev_result %}
+  <a href="/student/semester/{{ prev_result.semester_number }}" class="btn btn-outline"><i class="fas fa-chevron-left"></i> Previous Semester (S{{ prev_result.semester_number }})</a>
+  {% else %}
+  <div></div>
+  {% endif %}
+  <a href="/student/dashboard" class="btn btn-outline"><i class="fas fa-home"></i> Back to Dashboard</a>
+  {% if next_result %}
+  <a href="/student/semester/{{ next_result.semester_number }}" class="btn btn-outline">Next Semester (S{{ next_result.semester_number }}) <i class="fas fa-chevron-right"></i></a>
+  {% else %}
+  <div></div>
+  {% endif %}
+</div>
+
+<script>
+if (window.location.hash) {
+  setTimeout(function() {
+    const el = document.querySelector(window.location.hash);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+</script>
+{% endblock %}

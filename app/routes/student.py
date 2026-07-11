@@ -2,7 +2,7 @@
 from flask_login import login_required, current_user
 from app.models import (StudentProfile, SemesterResult, Document, Notification,
     ScheduleEntry, Program, Department, Internship, Certification, Project,
-    Conversation, Message)
+    Conversation, Message, AttendanceRecord, AssignmentSubmission, QuizResult)
 from app import db
 from datetime import datetime as dt
 import os
@@ -69,6 +69,34 @@ def results():
     profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
     results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all() if profile else []
     return render_template("student/results.html", profile=profile, results=results)
+
+@student_bp.route("/semester/<int:sem_number>")
+@login_required
+def semester_detail(sem_number):
+    profile = StudentProfile.query.filter_by(user_id=current_user.id).first()
+    if not profile:
+        flash("Profile not found.", "danger")
+        return redirect(url_for("student.dashboard"))
+
+    result = SemesterResult.query.filter_by(student_id=profile.id, semester_number=sem_number).first()
+    if not result:
+        flash(f"Semester {sem_number} not found.", "warning")
+        return redirect(url_for("student.dashboard"))
+
+    all_results = SemesterResult.query.filter_by(student_id=profile.id).order_by(SemesterResult.semester_number).all()
+    prev_result = next((r for r in all_results if r.semester_number == sem_number - 1), None)
+    next_result = next((r for r in all_results if r.semester_number == sem_number + 1), None)
+
+    semester_attendance = AttendanceRecord.query.filter_by(student_id=profile.id).order_by(AttendanceRecord.date.desc()).limit(50).all()
+
+    semester_assignments = AssignmentSubmission.query.filter_by(student_id=profile.id).order_by(AssignmentSubmission.submitted_at.desc()).all()
+
+    semester_quizzes = QuizResult.query.filter_by(student_id=profile.id).order_by(QuizResult.completed_at.desc()).all()
+
+    return render_template("student/semester.html",
+        profile=profile, result=result, prev_result=prev_result, next_result=next_result,
+        sem_number=sem_number, semester_attendance=semester_attendance,
+        semester_assignments=semester_assignments, semester_quizzes=semester_quizzes)
 
 @student_bp.route("/documents")
 @login_required
