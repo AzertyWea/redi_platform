@@ -5,6 +5,9 @@
 <a href="/employer/search"><i class="fas fa-search"></i> {{ _('talent_search') }}</a>
 <a href="/employer/candidates"><i class="fas fa-users"></i> {{ _('candidates') }}</a>
 <a href="/employer/chat"><i class="fas fa-comments"></i> {{ _('messages') }}{% if unread > 0 %} <span class="badge badge-danger" style="margin-left:auto">{{ unread }}</span>{% endif %}</a>
+<div class="sidebar-divider"></div>
+<div class="menu-label">Community</div>
+<a href="/feed"><i class="fas fa-users"></i> Community Feed</a>
 {% endblock %}
 {% block page_title %}Talent Search{% endblock %}
 {% block content %}
