@@ -11,7 +11,7 @@
 <div class="card">
   <h3><i class="fas fa-receipt"></i> All Receipts ({{ payments|length }})</h3>
   <table class="table">
-    <thead><tr><th>#</th><th>Date</th><th>Student</th><th>Amount</th><th>Method</th><th>Ref</th></tr></thead>
+    <thead><tr><th>#</th><th>Date</th><th>Student</th><th>Amount</th><th>Method</th><th>Ref</th><th>Action</th></tr></thead>
     <tbody>
       {% for p in payments %}
       <tr>
@@ -21,6 +21,7 @@
         <td><strong>{{ "{:,.0f}".format(p.amount) }} FCFA</strong></td>
         <td>{{ p.payment_method }}</td>
         <td>{{ p.reference or '-' }}</td>
+        <td><a href="/unidy/finance/receipts/{{ p.id }}/pdf" class="btn btn-sm btn-primary"><i class="fas fa-file-pdf"></i> PDF</a></td>
       </tr>
       {% endfor %}
     </tbody>

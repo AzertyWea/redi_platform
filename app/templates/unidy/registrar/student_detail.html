@@ -19,6 +19,7 @@
       <tr><td><strong>Semester</strong></td><td>{{ profile.current_semester }}</td></tr>
       <tr><td><strong>ERI Score</strong></td><td>{{ profile.eri_score }}%</td></tr>
     </table>
+    <a href="/unidy/registrar/students/{{ profile.id }}/transcript" class="btn btn-primary" style="margin-top:12px"><i class="fas fa-file-pdf"></i> Download Transcript</a>
   </div>
   <div class="card">
     <h3><i class="fas fa-book"></i> Enrollments ({{ enrollments|length }})</h3>

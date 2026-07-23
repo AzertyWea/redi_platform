@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+import json
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from app.models import (User, StudentProfile, Department, Program, SchoolClass,
-                        AcademicYear, AcademicSemester, AuditLog)
+                        AcademicYear, AcademicSemester, AuditLog, Enrollment, CourseGrade)
 from app import db
 
 unidy_admin_bp = Blueprint('unidy_admin', __name__, url_prefix='/unidy/admin')
@@ -153,3 +154,75 @@ def academic_year():
         return redirect(url_for('unidy_admin.academic_year'))
     years = AcademicYear.query.order_by(AcademicYear.start_date.desc()).all()
     return render_template('unidy/admin/academic_year.html', current_ay=current_ay, years=years)
+
+@unidy_admin_bp.route('/bulk-import', methods=['GET'])
+@login_required
+def bulk_import():
+    if not admin_required():
+        return redirect(url_for('auth.login'))
+    programs = Program.query.all()
+    classes = SchoolClass.query.all()
+    current_sem = AcademicSemester.query.filter_by(is_current=True).first()
+    from app.models import Course
+    courses = Course.query.all()
+    return render_template('unidy/admin/bulk_import.html',
+                           programs=programs, classes=classes,
+                           courses=courses, current_sem=current_sem)
+
+@unidy_admin_bp.route('/bulk-import/preview', methods=['POST'])
+@login_required
+def bulk_import_preview():
+    if not admin_required():
+        return redirect(url_for('auth.login'))
+    import_type = request.form.get('import_type', '').strip()
+    program_id = request.form.get('program_id', type=int)
+    class_id = request.form.get('class_id', type=int)
+    course_id = request.form.get('course_id', type=int)
+    sem_id = request.form.get('semester_id', type=int)
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        flash('Please select a file to upload.', 'danger')
+        return redirect(url_for('unidy_admin.bulk_import'))
+
+    from app.services.unidy_import import import_students, import_enrollments, import_grades
+    if import_type == 'students':
+        result = import_students(file, program_id=program_id, class_id=class_id)
+    elif import_type == 'enrollments':
+        result = import_enrollments(file, semester_id=sem_id)
+    elif import_type == 'grades':
+        result = import_grades(file, course_id=course_id, semester_id=sem_id)
+    else:
+        flash('Invalid import type.', 'danger')
+        return redirect(url_for('unidy_admin.bulk_import'))
+
+    if result['errors']:
+        for err in result['errors'][:5]:
+            flash(err, 'warning')
+    flash(f'Import complete: {result["created"]} created, {result["skipped"]} skipped.', 'success')
+    return redirect(url_for('unidy_admin.bulk_import'))
+
+@unidy_admin_bp.route('/bulk-import/template/<import_type>')
+@login_required
+def bulk_import_template(import_type):
+    if not admin_required():
+        return redirect(url_for('auth.login'))
+    import io
+    import pandas as pd
+    output = io.BytesIO()
+    if import_type == 'students':
+        df = pd.DataFrame(columns=['matricule', 'name', 'email', 'program', 'department', 'password'])
+        df.loc[0] = ['STU001', 'John Doe', 'john@redi.cm', 'HND Software Engineering', 'Computer Science', 'student123']
+    elif import_type == 'enrollments':
+        df = pd.DataFrame(columns=['matricule', 'course'])
+        df.loc[0] = ['STU001', 'Introduction to Programming']
+    elif import_type == 'grades':
+        df = pd.DataFrame(columns=['matricule', 'ca_score', 'exam_score', 'course'])
+        df.loc[0] = ['STU001', 16.5, 14.0, 'Introduction to Programming']
+    else:
+        flash('Invalid template type.', 'danger')
+        return redirect(url_for('unidy_admin.bulk_import'))
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='data')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     download_name=f'unidy_{import_type}_template.xlsx', as_attachment=True)

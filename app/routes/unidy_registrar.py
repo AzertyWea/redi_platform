@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from app.models import (User, StudentProfile, Admission, Enrollment, AcademicYear,
-                        AcademicSemester, Department, Program, AuditLog, SchoolClass)
+                        AcademicSemester, Department, Program, AuditLog, SchoolClass,
+                        CourseGrade, Transcript)
 from app import db
 
 unidy_registrar_bp = Blueprint('unidy_registrar', __name__, url_prefix='/unidy/registrar')
@@ -121,7 +122,35 @@ def student_detail(id):
         return redirect(url_for('auth.login'))
     profile = StudentProfile.query.get_or_404(id)
     enrollments = Enrollment.query.filter_by(student_id=id).all()
-    from app.models import CourseGrade
     grades = CourseGrade.query.filter_by(student_id=id).all()
     return render_template('unidy/registrar/student_detail.html',
                            profile=profile, enrollments=enrollments, grades=grades)
+
+@unidy_registrar_bp.route('/students/<int:id>/transcript')
+@login_required
+def generate_transcript(id):
+    if not registrar_required():
+        return redirect(url_for('auth.login'))
+    profile = StudentProfile.query.get_or_404(id)
+    sem_id = request.args.get('semester_id', type=int)
+    if sem_id:
+        grades = CourseGrade.query.filter_by(student_id=id, semester_id=sem_id).all()
+        sem = AcademicSemester.query.get(sem_id)
+        sem_num = sem.number if sem else 0
+        ay_name = sem.academic_year.name if sem and sem.academic_year else 'N/A'
+    else:
+        grades = CourseGrade.query.filter_by(student_id=id).all()
+        current_sem = AcademicSemester.query.filter_by(is_current=True).first()
+        sem_num = current_sem.number if current_sem else 1
+        ay_name = current_sem.academic_year.name if current_sem and current_sem.academic_year else '2025-2026'
+
+    from app.services.unidy_transcript import generate_transcript_pdf
+    buffer = generate_transcript_pdf(profile, grades, ay_name, sem_num)
+    log = AuditLog(user_id=current_user.id, role=current_user.role,
+                  action='generate_transcript', target_type='transcript',
+                  target_id=id)
+    db.session.add(log)
+    db.session.commit()
+    return send_file(buffer, mimetype='application/pdf',
+                     download_name=f'transcript_{profile.user.matricule}_{ay_name}_s{sem_num}.pdf',
+                     as_attachment=True)

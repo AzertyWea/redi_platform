@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from app.models import (StudentProfile, FeeStructure, FeePayment,
                         AcademicYear, AuditLog, User)
@@ -85,3 +85,24 @@ def receipts():
         return redirect(url_for('auth.login'))
     payments = FeePayment.query.order_by(FeePayment.created_at.desc()).all()
     return render_template('unidy/finance/receipts.html', payments=payments)
+
+@unidy_finance_bp.route('/receipts/<int:payment_id>/pdf')
+@login_required
+def receipt_pdf(payment_id):
+    if not finance_required():
+        return redirect(url_for('auth.login'))
+    payment = FeePayment.query.get_or_404(payment_id)
+    profile = StudentProfile.query.get(payment.student_id)
+    if not profile:
+        flash('Student profile not found.', 'danger')
+        return redirect(url_for('unidy_finance.receipts'))
+    from app.services.unidy_receipt import generate_receipt_pdf
+    buffer = generate_receipt_pdf(payment, profile)
+    log = AuditLog(user_id=current_user.id, role=current_user.role,
+                  action='download_receipt', target_type='fee_payment',
+                  target_id=payment_id)
+    db.session.add(log)
+    db.session.commit()
+    return send_file(buffer, mimetype='application/pdf',
+                     download_name=f'receipt_{payment_id:06d}.pdf',
+                     as_attachment=True)

@@ -1,0 +1,128 @@
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import cm
+import io
+from app.models import CourseGrade, AcademicSemester, Program, TranscriptItem
+
+
+GRADE_POINTS = {'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'F': 0.0}
+
+
+def calculate_gpa(grades):
+    total_credits = 0
+    total_points = 0
+    for g in grades:
+        c = g.credits or 3
+        total_credits += c
+        total_points += (g.grade_points or 0) * c
+    return round(total_points / total_credits, 2) if total_credits > 0 else 0.0
+
+
+def calculate_letter_grade(total_score):
+    if total_score >= 70:
+        return 'A', 4.0
+    elif total_score >= 60:
+        return 'B', 3.0
+    elif total_score >= 50:
+        return 'C', 2.0
+    elif total_score >= 40:
+        return 'D', 1.0
+    else:
+        return 'F', 0.0
+
+
+def generate_transcript_pdf(profile, grades, academic_year, semester_number):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    user = profile.user
+
+    title_style = ParagraphStyle('title', fontSize=20, fontName='Helvetica-Bold',
+                                  textColor=colors.HexColor('#7B0D1E'), spaceAfter=4)
+    sub_style = ParagraphStyle('sub', fontSize=11,
+                                textColor=colors.HexColor('#6B5C5C'), spaceAfter=16)
+    label_style = ParagraphStyle('label', fontSize=10, fontName='Helvetica-Bold',
+                                  textColor=colors.HexColor('#1A0A0A'), spaceAfter=4)
+    body_style = ParagraphStyle('body', fontSize=10, spaceAfter=8)
+    note_style = ParagraphStyle('note', fontSize=9, textColor=colors.HexColor('#8C6E6E'),
+                                 spaceAfter=12)
+
+    story = []
+    story.append(Paragraph('UNIDY', title_style))
+    story.append(Paragraph('University Digital Management System', sub_style))
+    story.append(Spacer(1, 0.3*cm))
+    story.append(Paragraph('OFFICIAL ACADEMIC TRANSCRIPT', ParagraphStyle(
+        'transcript_title', fontSize=14, fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#1A0A0A'), spaceAfter=12, alignment=1)))
+
+    info_data = [
+        ['Student Name:', user.name, 'Matricule:', user.matricule],
+        ['Program:', profile.program or 'N/A', 'Semester:', f'{semester_number}'],
+        ['Academic Year:', academic_year or 'N/A', '', ''],
+    ]
+    info_table = Table(info_data, colWidths=[3.5*cm, 5.5*cm, 3.5*cm, 5.5*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#6B5C5C')),
+        ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#6B5C5C')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    story.append(info_table)
+    story.append(Spacer(1, 0.5*cm))
+
+    if grades:
+        story.append(Paragraph('Course Results', label_style))
+        header = ['Course', 'Code', 'CA', 'Exam', 'Total', 'Grade', 'Credits']
+        data = [header]
+        total_credits = 0
+        total_points = 0
+        for g in grades:
+            course = g.course
+            c = g.credits or 3
+            total_credits += c
+            total_points += (g.grade_points or 0) * c
+            data.append([
+                course.name if course else 'N/A',
+                course.code if course else '-',
+                f'{g.ca_score:.1f}',
+                f'{g.exam_score:.1f}',
+                f'{g.total_score:.1f}',
+                g.grade_letter or '-',
+                str(c)
+            ])
+        gpa = round(total_points / total_credits, 2) if total_credits > 0 else 0.0
+        data.append(['', '', '', '', '', f'GPA: {gpa:.2f}', f'Total: {total_credits}'])
+
+        t = Table(data, colWidths=[4.5*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2*cm, 1.5*cm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#7B0D1E')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F4F2F2')]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8E0E0')),
+            ('PADDING', (0, 0), (-1, -1), 6),
+            ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('LINEABOVE', (0, -1), (-1, -1), 1.5, colors.HexColor('#7B0D1E')),
+        ]))
+        story.append(t)
+    else:
+        story.append(Paragraph('No grades recorded for this semester.', note_style))
+
+    story.append(Spacer(1, 1*cm))
+    story.append(Paragraph(
+        'This transcript is generated by the UNIDY management system. '
+        'For official verification, contact the Registrar\'s office.',
+        note_style))
+    story.append(Paragraph(
+        f'Generated: {__import__("datetime").datetime.now().strftime("%d %B %Y %H:%M")}',
+        ParagraphStyle('date', fontSize=8, textColor=colors.HexColor('#8C6E6E'))))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
