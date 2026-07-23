@@ -1,0 +1,46 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/registrar/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/registrar/admissions" class="active"><i class="fas fa-user-plus"></i> Admissions</a>
+<a href="/unidy/registrar/enrollments"><i class="fas fa-book"></i> Enrollments</a>
+<a href="/unidy/registrar/students"><i class="fas fa-users"></i> Students</a>
+{% endblock %}
+{% block page_title %}Admissions{% endblock %}
+{% block content %}
+<div style="margin-bottom:16px">
+  <a href="?status=" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+  <a href="?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
+  <a href="?status=approved" class="btn btn-sm {% if status_filter == 'approved' %}btn-primary{% else %}btn-secondary{% endif %}">Approved</a>
+  <a href="?status=rejected" class="btn btn-sm {% if status_filter == 'rejected' %}btn-primary{% else %}btn-secondary{% endif %}">Rejected</a>
+</div>
+<div class="card">
+  <h3><i class="fas fa-list"></i> All Admissions</h3>
+  <table class="table">
+    <thead><tr><th>Student</th><th>Program</th><th>Year</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for a in admissions %}
+      <tr>
+        <td><strong>{{ a.student.name if a.student else 'N/A' }}</strong></td>
+        <td>{{ a.program.name if a.program else '-' }}</td>
+        <td>{{ a.academic_year.name if a.academic_year else '-' }}</td>
+        <td><span class="badge {{ 'badge-success' if a.status == 'approved' else 'badge-danger' if a.status == 'rejected' else 'badge-warning' }}">{{ a.status }}</span></td>
+        <td>{{ a.created_at.strftime('%Y-%m-%d') if a.created_at else '-' }}</td>
+        <td>
+          {% if a.status == 'pending' %}
+          <form method="POST" action="/unidy/registrar/admissions/{{ a.id }}/approve" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-primary"><i class="fas fa-check"></i></button>
+          </form>
+          <form method="POST" action="/unidy/registrar/admissions/{{ a.id }}/reject" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-secondary"><i class="fas fa-times"></i></button>
+          </form>
+          {% else %} — {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

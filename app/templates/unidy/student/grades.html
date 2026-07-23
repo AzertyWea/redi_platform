@@ -1,0 +1,30 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/student/grades" class="active"><i class="fas fa-star"></i> My Grades</a>
+<a href="/unidy/student/payments"><i class="fas fa-money-bill"></i> My Payments</a>
+<a href="/unidy/student/transcripts"><i class="fas fa-file-alt"></i> Transcripts</a>
+{% endblock %}
+{% block page_title %}My Grades{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-star"></i> All My Grades</h3>
+  <table class="table">
+    <thead><tr><th>Course</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Credits</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for g in grades %}
+      <tr>
+        <td>{{ g.course.name if g.course else '-' }}</td>
+        <td>{{ g.ca_score }}</td>
+        <td>{{ g.exam_score }}</td>
+        <td><strong>{{ g.total_score }}</strong></td>
+        <td><span class="badge badge-info">{{ g.grade_letter }}</span></td>
+        <td>{{ g.credits }}</td>
+        <td>{{ g.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

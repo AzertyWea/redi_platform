@@ -385,3 +385,168 @@ class ScheduleEntry(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     course = db.relationship("Course", backref="schedule_entries")
     school_class = db.relationship("SchoolClass", backref="schedule_entries")
+
+
+# ═══════════════════════════════════════════
+# UNIDY MODELS — University Digital Management
+# ═══════════════════════════════════════════
+
+class AcademicYear(db.Model):
+    __tablename__ = "academic_years"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), unique=True, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_current = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    semesters = db.relationship("AcademicSemester", backref="academic_year", cascade="all, delete-orphan")
+
+    @property
+    def duration_months(self):
+        delta = self.end_date - self.start_date
+        return max(1, delta.days // 30)
+
+class AcademicSemester(db.Model):
+    __tablename__ = "academic_semesters"
+    id = db.Column(db.Integer, primary_key=True)
+    academic_year_id = db.Column(db.Integer, db.ForeignKey("academic_years.id"), nullable=False, index=True)
+    name = db.Column(db.String(50), nullable=False)
+    number = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_current = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Admission(db.Model):
+    __tablename__ = "admissions"
+    id = db.Column(db.Integer, primary_key=True)
+    student_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    academic_year_id = db.Column(db.Integer, db.ForeignKey("academic_years.id"), index=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"))
+    status = db.Column(db.String(20), default="pending")
+    notes = db.Column(db.Text)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime)
+    student = db.relationship("User", foreign_keys=[student_user_id], backref="admissions")
+    reviewer = db.relationship("User", foreign_keys=[reviewed_by])
+    academic_year = db.relationship("AcademicYear", backref="admissions")
+    program = db.relationship("Program", backref="admissions")
+
+class Enrollment(db.Model):
+    __tablename__ = "enrollments"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profiles.id"), nullable=False, index=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False, index=True)
+    semester_id = db.Column(db.Integer, db.ForeignKey("academic_semesters.id"), index=True)
+    academic_year = db.Column(db.String(20))
+    status = db.Column(db.String(20), default="active")
+    enrolled_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    student_profile = db.relationship("StudentProfile", backref="enrollments")
+    course = db.relationship("Course", backref="enrollments")
+    semester = db.relationship("AcademicSemester", backref="enrollments")
+    __table_args__ = (db.UniqueConstraint("student_id", "course_id", "semester_id"),)
+
+class FeeStructure(db.Model):
+    __tablename__ = "fee_structures"
+    id = db.Column(db.Integer, primary_key=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), index=True)
+    level = db.Column(db.Integer, nullable=False)
+    semester_number = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(200))
+    academic_year = db.Column(db.String(20))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    program = db.relationship("Program", backref="fee_structures")
+
+class FeePayment(db.Model):
+    __tablename__ = "fee_payments"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profiles.id"), nullable=False, index=True)
+    amount = db.Column(db.Float, nullable=False)
+    payment_method = db.Column(db.String(30), default="cash")
+    reference = db.Column(db.String(100))
+    receipt_number = db.Column(db.String(50))
+    notes = db.Column(db.Text)
+    recorded_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    payment_date = db.Column(db.Date, nullable=False)
+    academic_year = db.Column(db.String(20))
+    semester_number = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    student_profile = db.relationship("StudentProfile", backref="payments")
+    recorder = db.relationship("User", backref="recorded_payments")
+
+class CourseGrade(db.Model):
+    __tablename__ = "course_grades"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profiles.id"), nullable=False, index=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False, index=True)
+    semester_id = db.Column(db.Integer, db.ForeignKey("academic_semesters.id"), index=True)
+    ca_score = db.Column(db.Float, default=0)
+    exam_score = db.Column(db.Float, default=0)
+    total_score = db.Column(db.Float, default=0)
+    grade_letter = db.Column(db.String(2))
+    grade_points = db.Column(db.Float, default=0)
+    credits = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default="draft")
+    graded_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    locked = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    student_profile = db.relationship("StudentProfile", backref="course_grades")
+    course = db.relationship("Course", backref="course_grades")
+    semester = db.relationship("AcademicSemester", backref="course_grades")
+    grader = db.relationship("User", backref="graded_courses")
+    __table_args__ = (db.UniqueConstraint("student_id", "course_id", "semester_id"),)
+
+class Transcript(db.Model):
+    __tablename__ = "transcripts"
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profiles.id"), nullable=False, index=True)
+    academic_year = db.Column(db.String(20))
+    semester_number = db.Column(db.Integer)
+    semester_gpa = db.Column(db.Float, default=0)
+    cumulative_gpa = db.Column(db.Float, default=0)
+    total_credits = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default="draft")
+    generated_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    pdf_filename = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    student_profile = db.relationship("StudentProfile", backref="transcripts")
+    generator = db.relationship("User", backref="generated_transcripts")
+
+class TranscriptItem(db.Model):
+    __tablename__ = "transcript_items"
+    id = db.Column(db.Integer, primary_key=True)
+    transcript_id = db.Column(db.Integer, db.ForeignKey("transcripts.id"), nullable=False, index=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"))
+    course_name = db.Column(db.String(150))
+    course_code = db.Column(db.String(20))
+    ca_score = db.Column(db.Float, default=0)
+    exam_score = db.Column(db.Float, default=0)
+    total_score = db.Column(db.Float, default=0)
+    grade_letter = db.Column(db.String(2))
+    grade_points = db.Column(db.Float, default=0)
+    credits = db.Column(db.Integer, default=0)
+    transcript = db.relationship("Transcript", backref="items")
+    course = db.relationship("Course")
+
+class AdmissionApplication(db.Model):
+    __tablename__ = "admission_applications"
+    id = db.Column(db.Integer, primary_key=True)
+    applicant_name = db.Column(db.String(120), nullable=False)
+    applicant_email = db.Column(db.String(120))
+    applicant_phone = db.Column(db.String(30))
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"))
+    academic_year_id = db.Column(db.Integer, db.ForeignKey("academic_years.id"))
+    status = db.Column(db.String(20), default="pending")
+    documents_json = db.Column(db.Text)
+    notes = db.Column(db.Text)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime)
+    program = db.relationship("Program", backref="applications")
+    academic_year = db.relationship("AcademicYear", backref="applications")
+    reviewer = db.relationship("User", foreign_keys=[reviewed_by])

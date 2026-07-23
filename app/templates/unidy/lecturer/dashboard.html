@@ -1,0 +1,27 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/lecturer/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/lecturer/grades"><i class="fas fa-star"></i> All Grades</a>
+{% endblock %}
+{% block page_title %}Lecturer Dashboard{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-book"></i> My Courses</h3>
+  <table class="table">
+    <thead><tr><th>Course</th><th>Code</th><th>Semester</th><th>Enrolled</th><th>Graded</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for c in courses %}
+      <tr>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>{{ c.code or '-' }}</td>
+        <td>{{ c.semester_number or '-' }}</td>
+        <td>{{ grade_counts[c.id].enrolled }}</td>
+        <td>{{ grade_counts[c.id].graded }}</td>
+        <td><a href="/unidy/lecturer/courses/{{ c.id }}/grades" class="btn btn-sm btn-primary">Enter Grades</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

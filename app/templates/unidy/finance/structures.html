@@ -1,0 +1,60 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/finance/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/finance/payments"><i class="fas fa-money-bill"></i> Payments</a>
+<a href="/unidy/finance/structures" class="active"><i class="fas fa-list"></i> Fee Structures</a>
+<a href="/unidy/finance/receipts"><i class="fas fa-receipt"></i> Receipts</a>
+{% endblock %}
+{% block page_title %}Fee Structures{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-plus"></i> Create Fee Structure</h3>
+  <form method="POST" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="flex:1;min-width:180px">
+      <label>Program</label>
+      <select name="program_id" class="form-control" required>
+        {% for p in programs %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div style="width:80px">
+      <label>Level</label>
+      <input type="number" name="level" class="form-control" min="1" max="5" required>
+    </div>
+    <div style="width:100px">
+      <label>Semester</label>
+      <select name="semester_number" class="form-control">
+        <option value="1">Sem 1</option>
+        <option value="2">Sem 2</option>
+      </select>
+    </div>
+    <div style="width:140px">
+      <label>Amount (FCFA)</label>
+      <input type="number" name="amount" class="form-control" min="1" required>
+    </div>
+    <div style="flex:1;min-width:150px">
+      <label>Description</label>
+      <input type="text" name="description" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create</button>
+  </form>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3><i class="fas fa-list"></i> All Fee Structures</h3>
+  <table class="table">
+    <thead><tr><th>Program</th><th>Level</th><th>Semester</th><th>Amount</th><th>Description</th></tr></thead>
+    <tbody>
+      {% for fs in structures %}
+      <tr>
+        <td>{{ fs.program.name if fs.program else '-' }}</td>
+        <td>{{ fs.level }}</td>
+        <td>S{{ fs.semester_number }}</td>
+        <td><strong>{{ "{:,.0f}".format(fs.amount) }} FCFA</strong></td>
+        <td>{{ fs.description or '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

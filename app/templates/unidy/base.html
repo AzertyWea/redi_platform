@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'en' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block page_title %}UNIDY{% endblock %} — UNIDY</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="/static/css/redi.css?v=4" rel="stylesheet">
+<style>
+.sidebar .sidebar-logo a .logo-icon {
+  background: linear-gradient(135deg, #123, #463270) !important;
+}
+.sidebar .sidebar-logo a .logo-text h2 { font-size: 1.1rem; }
+.sidebar .sidebar-logo a .logo-text span { font-size: 0.7rem; color: #999; }
+.unidy-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.1); color: #fff; margin-left: 8px;
+  vertical-align: middle;
+}
+.stats-row .stat-card { border-left: 4px solid #123; }
+.stats-row .stat-card.teal { border-left-color: #17A589; }
+.stats-row .stat-card.amber { border-left-color: #E67E22; }
+.stats-row .stat-card.blue { border-left-color: #2980B9; }
+.stats-row .stat-card.red { border-left-color: #C0392B; }
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    {% set home_link = url_for('auth.welcome') %}
+    {% if current_user.is_authenticated %}
+      {% set role = current_user.role %}
+      {% set home_link = url_for(role + '.dashboard') if role in ['registrar','finance_officer','lecturer','admin','student'] and role != 'admin' else url_for('admin.dashboard') if role == 'admin' else url_for('auth.welcome') %}
+    {% endif %}
+    <a href="{{ home_link }}">
+      <div class="logo-icon"><i class="fas fa-university"></i></div>
+      <div class="logo-text">
+        <h2>UNIDY<span class="unidy-badge">Management</span></h2>
+        <span>University Digital Management</span>
+      </div>
+    </a>
+  </div>
+  <div class="sidebar-menu">
+    {% block sidebar %}{% endblock %}
+    <div class="sidebar-divider"></div>
+    <a href="/feed"><i class="fas fa-users"></i> Community</a>
+    <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+</div>
+<div class="main">
+  <div class="topnav">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0">
+      <button id="sidebar-toggle" style="background:none;border:none;font-size:20px;color:var(--primary);cursor:pointer;padding:4px">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h1>{{ self.page_title() }}</h1>
+    </div>
+    <div class="topnav-actions">
+      <div class="language-switcher">
+        <button onclick="setLang('en')" class="{% if lang == 'en' %}active{% endif %}" title="English">EN</button>
+        <button onclick="setLang('fr')" class="{% if lang == 'fr' %}active{% endif %}" title="Français">FR</button>
+      </div>
+      {% if current_user.is_authenticated %}
+      <a href="/notifications" class="notif-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated %}
+      <div class="user-info">
+        <a href="#" class="avatar" title="Profile">
+          {{ current_user.name[0] }}
+        </a>
+        <span class="user-name">{{ current_user.name }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" data-autohide><i class="fas fa-info-circle"></i> {{ message }}<button class="close-btn">&times;</button></div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99"></div>
+<input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+<div id="toast-container"></div>
+<script>
+function setLang(lang) {
+  fetch('/set-language/' + lang, { method: 'POST', headers: { 'X-CSRFToken': document.querySelector('[name=csrf_token]').value } })
+    .then(function(){ location.reload(); });
+}
+document.querySelectorAll('[data-autohide]').forEach(function(el){ setTimeout(function(){ el.style.display='none'; },5000); });
+document.querySelectorAll('.close-btn').forEach(function(btn){ btn.onclick=function(){ btn.parentElement.style.display='none'; }; });
+</script>
+</body>
+</html>

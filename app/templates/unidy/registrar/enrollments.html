@@ -1,0 +1,50 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/registrar/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/registrar/admissions"><i class="fas fa-user-plus"></i> Admissions</a>
+<a href="/unidy/registrar/enrollments" class="active"><i class="fas fa-book"></i> Enrollments</a>
+<a href="/unidy/registrar/students"><i class="fas fa-users"></i> Students</a>
+{% endblock %}
+{% block page_title %}Course Enrollments{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-plus"></i> Enroll Student</h3>
+  <form method="POST" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="flex:1;min-width:180px">
+      <label>Student</label>
+      <select name="student_id" class="form-control" required>
+        <option value="">— Select —</option>
+        {% for s in students %}<option value="{{ s.id }}">{{ s.user.name }} ({{ s.user.matricule }})</option>{% endfor %}
+      </select>
+    </div>
+    <div style="flex:1;min-width:180px">
+      <label>Course</label>
+      <select name="course_id" class="form-control" required>
+        <option value="">— Select —</option>
+        {% for c in courses %}<option value="{{ c.id }}">{{ c.name }} ({{ c.code or '' }})</option>{% endfor %}
+      </select>
+    </div>
+    <input type="hidden" name="semester_id" value="{{ current_sem.id if current_sem else '' }}">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Enroll</button>
+  </form>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3><i class="fas fa-list"></i> All Enrollments ({{ enrollments|length }})</h3>
+  <table class="table">
+    <thead><tr><th>Student</th><th>Course</th><th>Semester</th><th>Status</th><th>Enrolled</th></tr></thead>
+    <tbody>
+      {% for e in enrollments %}
+      <tr>
+        <td>{{ e.student_profile.user.name if e.student_profile else 'N/A' }}</td>
+        <td>{{ e.course.name if e.course else '-' }}</td>
+        <td>{{ e.semester.name if e.semester else '-' }}</td>
+        <td><span class="badge badge-success">{{ e.status }}</span></td>
+        <td>{{ e.created_at.strftime('%Y-%m-%d') if e.created_at else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

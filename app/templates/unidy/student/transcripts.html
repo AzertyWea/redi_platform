@@ -1,0 +1,32 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/student/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/student/grades"><i class="fas fa-star"></i> My Grades</a>
+<a href="/unidy/student/payments"><i class="fas fa-money-bill"></i> My Payments</a>
+<a href="/unidy/student/transcripts" class="active"><i class="fas fa-file-alt"></i> Transcripts</a>
+{% endblock %}
+{% block page_title %}My Transcripts{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-file-alt"></i> Transcripts</h3>
+  {% if transcripts %}
+  <table class="table">
+    <thead><tr><th>Academic Year</th><th>Semester</th><th>GPA</th><th>Cumulative GPA</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for t in transcripts %}
+      <tr>
+        <td>{{ t.academic_year }}</td>
+        <td>S{{ t.semester_number }}</td>
+        <td><strong>{{ "%.2f"|format(t.semester_gpa) }}</strong></td>
+        <td>{{ "%.2f"|format(t.cumulative_gpa) }}</td>
+        <td><span class="badge {{ 'badge-success' if t.status == 'finalized' else 'badge-warning' }}">{{ t.status }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#888">No transcripts generated yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

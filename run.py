@@ -1,5 +1,7 @@
 from app import create_app, db, socketio, HAS_SOCKETIO
 from app.models import User, StudentProfile, SemesterResult, Document, Notification
+from app.models import AcademicYear, AcademicSemester, Department, Program, SchoolClass
+from app.models import FeeStructure
 
 app = create_app()
 
@@ -13,11 +15,15 @@ def seed_data():
         {'matricule':'T001','name':'Dr. Marie Dipene','email':'marie@redi.cm','role':'teacher','dept':'Computer Science'},
         {'matricule':'ADMIN01','name':'Admin REDI','email':'admin@redi.cm','role':'admin','dept':'Administration'},
         {'matricule':'E001','name':'TechCorp HR','email':'hr@techcorp.cm','role':'employer','dept':'Industry'},
+        {'matricule':'REG01','name':'Marie Ngono','email':'registrar@redi.cm','role':'registrar','dept':'Registrar'},
+        {'matricule':'FIN01','name':'Paul Mbida','email':'finance@redi.cm','role':'finance_officer','dept':'Finance'},
+        {'matricule':'LEC01','name':'Dr. Jean Fotso','email':'fotso@redi.cm','role':'teacher','dept':'Computer Science'},
+        {'matricule':'ACAD01','name':'Prof. Sarah Atanga','email':'academic@redi.cm','role':'admin','dept':'Academic Affairs'},
     ]
     for u in users:
         user = User(matricule=u['matricule'], name=u['name'], email=u['email'],
                     role=u['role'], department=u['dept'])
-        pwd = 'admin1234' if u['role'] == 'admin' else 'demo1234'
+        pwd = 'admin1234' if u['role'] in ('admin', 'registrar', 'finance_officer') else 'demo1234'
         user.set_password(pwd)
         db.session.add(user)
     db.session.commit()
@@ -77,6 +83,72 @@ def seed_data():
     db.session.commit()
     print('Seed data loaded.')
 
+def seed_unidy():
+    if AcademicYear.query.first():
+        return
+    ay = AcademicYear(name="2025-2026",
+                      start_date="2025-09-01", end_date="2026-06-30",
+                      is_current=True)
+    db.session.add(ay)
+    db.session.flush()
+    s1 = AcademicSemester(academic_year_id=ay.id, name="Semester 1", number=1,
+                          start_date="2025-09-01", end_date="2026-01-15", is_current=True)
+    s2 = AcademicSemester(academic_year_id=ay.id, name="Semester 2", number=2,
+                          start_date="2026-01-16", end_date="2026-06-30")
+    db.session.add_all([s1, s2])
+    db.session.flush()
+
+    depts = [
+        Department(name="Computer Science"),
+        Department(name="Business Management"),
+        Department(name="Electrical Engineering"),
+        Department(name="Civil Engineering"),
+        Department(name="Law"),
+    ]
+    db.session.add_all(depts)
+    db.session.flush()
+
+    programs = [
+        Program(name="HND Software Engineering", department_id=depts[0].id),
+        Program(name="BEng Computer Science", department_id=depts[0].id),
+        Program(name="HND Business Management", department_id=depts[1].id),
+        Program(name="BEng Electrical Engineering", department_id=depts[2].id),
+        Program(name="BEng Civil Engineering", department_id=depts[3].id),
+        Program(name="LLB Law", department_id=depts[4].id),
+    ]
+    db.session.add_all(programs)
+    db.session.flush()
+
+    classes = [
+        SchoolClass(name="SWE-HND-1A", program_id=programs[0].id, level=1, section="A", academic_year="2025-2026"),
+        SchoolClass(name="SWE-HND-2A", program_id=programs[0].id, level=2, section="A", academic_year="2025-2026"),
+        SchoolClass(name="CS-BEng-3A", program_id=programs[1].id, level=3, section="A", academic_year="2025-2026"),
+        SchoolClass(name="BM-HND-1A", program_id=programs[2].id, level=1, section="A", academic_year="2025-2026"),
+        SchoolClass(name="BM-HND-2A", program_id=programs[2].id, level=2, section="A", academic_year="2025-2026"),
+        SchoolClass(name="EE-BEng-3A", program_id=programs[3].id, level=3, section="A", academic_year="2025-2026"),
+        SchoolClass(name="CE-BEng-3A", program_id=programs[4].id, level=3, section="A", academic_year="2025-2026"),
+        SchoolClass(name="LAW-LLB-3A", program_id=programs[5].id, level=3, section="A", academic_year="2025-2026"),
+    ]
+    db.session.add_all(classes)
+    db.session.flush()
+
+    fee_structures = []
+    for prog in programs:
+        for level in [1, 2, 3]:
+            fee_structures.append(FeeStructure(
+                program_id=prog.id, level=level, semester_number=1,
+                amount=150000, description=f"Tuition Fee S1 L{level}",
+                academic_year="2025-2026"
+            ))
+            fee_structures.append(FeeStructure(
+                program_id=prog.id, level=level, semester_number=2,
+                amount=150000, description=f"Tuition Fee S2 L{level}",
+                academic_year="2025-2026"
+            ))
+    db.session.add_all(fee_structures)
+    db.session.commit()
+    print('UNIDY seed data loaded.')
+
 def migrate_schema():
     import sqlalchemy as sa
     inspector = sa.inspect(db.engine)
@@ -110,6 +182,7 @@ with app.app_context():
 if __name__ == '__main__':
     with app.app_context():
         seed_data()
+        seed_unidy()
     if HAS_SOCKETIO:
         socketio.run(app, host='0.0.0.0', port=5000, debug=True)
     else:

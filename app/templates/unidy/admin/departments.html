@@ -1,0 +1,39 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/admin/departments" class="active"><i class="fas fa-building"></i> Departments</a>
+<a href="/unidy/admin/programs"><i class="fas fa-graduation-cap"></i> Programs</a>
+<a href="/unidy/admin/classes"><i class="fas fa-chalkboard"></i> Classes</a>
+<a href="/unidy/admin/users"><i class="fas fa-users"></i> Users</a>
+<a href="/unidy/admin/academic-year"><i class="fas fa-calendar"></i> Academic Year</a>
+{% endblock %}
+{% block page_title %}Departments{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-building"></i> Create Department</h3>
+  <form method="POST" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="flex:1;min-width:200px">
+      <label>Name</label>
+      <input type="text" name="name" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Create</button>
+  </form>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3><i class="fas fa-list"></i> All Departments ({{ departments|length }})</h3>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Programs</th><th>Classes</th></tr></thead>
+    <tbody>
+      {% for d in departments %}
+      <tr>
+        <td><strong>{{ d.name }}</strong></td>
+        <td>{{ d.programs|length }}</td>
+        <td>{{ d.school_classes|length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

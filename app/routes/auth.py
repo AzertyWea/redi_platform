@@ -3,14 +3,24 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
 
+ROLE_DASHBOARDS = {
+    'student': 'student.dashboard',
+    'teacher': 'teacher.dashboard',
+    'admin': 'admin.dashboard',
+    'employer': 'employer.dashboard',
+    'registrar': 'unidy_registrar.dashboard',
+    'finance_officer': 'unidy_finance.dashboard',
+    'lecturer': 'unidy_lecturer.dashboard',
+    'academic_admin': 'unidy_admin.dashboard',
+}
+
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/')
 def welcome():
     if current_user.is_authenticated:
-        role_routes = {'student': 'student.dashboard', 'teacher': 'teacher.dashboard',
-                       'admin': 'admin.dashboard', 'employer': 'employer.dashboard'}
-        return redirect(url_for(role_routes.get(current_user.role, 'auth.login')))
+        route = ROLE_DASHBOARDS.get(current_user.role, 'auth.login')
+        return redirect(url_for(route))
     return render_template('welcome.html', open_login=False)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -21,14 +31,8 @@ def login():
         user = User.query.filter_by(matricule=matricule).first()
         if user and user.check_password(password):
             login_user(user)
-            if user.role == 'student':
-                return redirect(url_for('student.dashboard'))
-            elif user.role == 'teacher':
-                return redirect(url_for('teacher.dashboard'))
-            elif user.role == 'admin':
-                return redirect(url_for('admin.dashboard'))
-            elif user.role == 'employer':
-                return redirect(url_for('employer.dashboard'))
+            route = ROLE_DASHBOARDS.get(user.role, 'auth.login')
+            return redirect(url_for(route))
         flash('Invalid credentials. Please try again.', 'danger')
         return render_template('welcome.html', open_login=True)
     return render_template('welcome.html', open_login=True)

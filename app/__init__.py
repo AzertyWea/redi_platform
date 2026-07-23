@@ -62,6 +62,11 @@ def create_app():
     from app.routes.ai_upload import ai_bp
     from app.routes.notifications import notifications_bp
     from app.routes.social import social_bp
+    from app.routes.unidy_admin import unidy_admin_bp
+    from app.routes.unidy_registrar import unidy_registrar_bp
+    from app.routes.unidy_finance import unidy_finance_bp
+    from app.routes.unidy_lecturer import unidy_lecturer_bp
+    from app.routes.unidy_student import unidy_student_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(social_bp)
@@ -71,6 +76,11 @@ def create_app():
     app.register_blueprint(employer_bp, url_prefix='/employer')
     app.register_blueprint(ai_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(unidy_admin_bp)
+    app.register_blueprint(unidy_registrar_bp)
+    app.register_blueprint(unidy_finance_bp)
+    app.register_blueprint(unidy_lecturer_bp)
+    app.register_blueprint(unidy_student_bp)
 
     from app.services import notification_service
 

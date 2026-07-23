@@ -1,0 +1,31 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/lecturer/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/lecturer/grades"><i class="fas fa-star"></i> All Grades</a>
+{% endblock %}
+{% block page_title %}Grades: {{ course.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-star"></i> Enter Grades — {{ course.name }}</h3>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <table class="table">
+      <thead><tr><th>Student</th><th>Matricule</th><th>CA (40%)</th><th>Exam (60%)</th><th>Current Grade</th></tr></thead>
+      <tbody>
+        {% for e in enrollments %}
+        {% set g = existing_grades.get(e.student_id) %}
+        <tr>
+          <td><strong>{{ e.student_profile.user.name if e.student_profile else 'N/A' }}</strong></td>
+          <td>{{ e.student_profile.user.matricule if e.student_profile else '-' }}</td>
+          <td><input type="number" name="student_{{ e.student_id }}_ca" class="form-control" min="0" max="20" step="0.5" value="{{ g.ca_score if g else '' }}"></td>
+          <td><input type="number" name="student_{{ e.student_id }}_exam" class="form-control" min="0" max="20" step="0.5" value="{{ g.exam_score if g else '' }}"></td>
+          <td>{% if g %}<span class="badge badge-info">{{ g.grade_letter }} ({{ g.total_score }})</span>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Grades</button>
+  </form>
+</div>
+{% endblock %}

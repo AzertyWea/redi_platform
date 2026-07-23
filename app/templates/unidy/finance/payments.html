@@ -1,0 +1,66 @@
+{% extends 'unidy/base.html' %}
+{% block sidebar %}
+<div class="menu-label">Navigation</div>
+<a href="/unidy/finance/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+<a href="/unidy/finance/payments" class="active"><i class="fas fa-money-bill"></i> Payments</a>
+<a href="/unidy/finance/structures"><i class="fas fa-list"></i> Fee Structures</a>
+<a href="/unidy/finance/receipts"><i class="fas fa-receipt"></i> Receipts</a>
+{% endblock %}
+{% block page_title %}Fee Payments{% endblock %}
+{% block content %}
+<div class="card">
+  <h3><i class="fas fa-plus"></i> Record Payment</h3>
+  <form method="POST" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="flex:1;min-width:180px">
+      <label>Student</label>
+      <select name="student_id" class="form-control" required>
+        <option value="">— Select —</option>
+        {% for s in students %}<option value="{{ s.id }}">{{ s.user.name }} ({{ s.user.matricule }})</option>{% endfor %}
+      </select>
+    </div>
+    <div style="width:140px">
+      <label>Amount (FCFA)</label>
+      <input type="number" name="amount" class="form-control" min="1" required>
+    </div>
+    <div style="width:120px">
+      <label>Method</label>
+      <select name="payment_method" class="form-control">
+        <option value="cash">Cash</option>
+        <option value="mobile">Mobile Money</option>
+        <option value="bank">Bank Transfer</option>
+      </select>
+    </div>
+    <div style="width:120px">
+      <label>Semester</label>
+      <select name="semester_number" class="form-control">
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+      </select>
+    </div>
+    <div style="flex:1;min-width:120px">
+      <label>Reference</label>
+      <input type="text" name="reference" class="form-control" placeholder="Optional">
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Record</button>
+  </form>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3><i class="fas fa-list"></i> Recent Payments</h3>
+  <table class="table">
+    <thead><tr><th>Date</th><th>Student</th><th>Amount</th><th>Method</th><th>Ref</th><th>Recorded By</th></tr></thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td>{{ p.payment_date }}</td>
+        <td>{{ p.student_profile.user.name if p.student_profile else 'N/A' }}</td>
+        <td><strong>{{ "{:,.0f}".format(p.amount) }} FCFA</strong></td>
+        <td>{{ p.payment_method }}</td>
+        <td>{{ p.reference or '-' }}</td>
+        <td>{{ p.recorder.name if p.recorder else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
